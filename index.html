@@ -8,11 +8,12 @@
     :root {
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
-      --text-main: #1e293b;
+      --text-main: #0f172a;
       --text-muted: #64748b;
-      --border-color: #e2e8f0;
+      --border-color: #cbd5e1;
       --accent: #2563eb;
-      --accent-hover: #1d4ed8;
+      --accent-frozen: #d97706;
+      --stable-color: #dc2626;
     }
 
     * {
@@ -25,7 +26,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-main);
-      padding: 2rem;
+      padding: 1.5rem;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -33,12 +34,12 @@
 
     header {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     h1 {
       font-size: 1.8rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.25rem;
     }
 
     p.subtitle {
@@ -49,10 +50,10 @@
     .container {
       display: flex;
       flex-wrap: wrap;
-      gap: 2rem;
+      gap: 1.5rem;
       justify-content: center;
       align-items: flex-start;
-      max-width: 1200px;
+      max-width: 1350px;
       width: 100%;
     }
 
@@ -60,7 +61,7 @@
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 1.5rem;
+      padding: 1.25rem;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
@@ -71,17 +72,18 @@
     canvas {
       display: block;
       cursor: crosshair;
+      background-color: #ffffff;
     }
 
     .sidebar {
-      min-width: 300px;
+      min-width: 340px;
       flex: 1;
-      max-width: 400px;
+      max-width: 420px;
     }
 
     .status-badge {
       display: inline-block;
-      padding: 0.25rem 0.75rem;
+      padding: 0.35rem 0.85rem;
       border-radius: 9999px;
       font-size: 0.85rem;
       font-weight: 600;
@@ -106,56 +108,89 @@
 
     th, td {
       text-align: left;
-      padding: 0.75rem 0.5rem;
-      border-bottom: 1px solid var(--border-color);
+      padding: 0.65rem 0.5rem;
+      border-bottom: 1px solid #f1f5f9;
     }
 
     th {
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
     td {
       font-weight: 500;
-      font-size: 1.05rem;
+      font-size: 0.95rem;
+    }
+
+    .phase-display {
+      font-weight: 700;
+      color: #1e293b;
+      background: #f1f5f9;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--accent);
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.4;
     }
 
     .info-box {
-      margin-top: 1.5rem;
-      padding: 1rem;
-      background-color: #f1f5f9;
+      margin-top: 1.25rem;
+      padding: 0.85rem;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 8px;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       line-height: 1.4;
       color: var(--text-muted);
     }
 
     .info-box ul {
       margin-left: 1.2rem;
+      margin-top: 0.4rem;
+    }
+
+    .legend {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8rem;
       margin-top: 0.5rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .legend-line {
+      width: 16px;
+      height: 2px;
     }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>Eisen-Kohlenstoff-Phasendiagramm</h1>
-    <p class="subtitle">Interaktives Werkstoffkunde-Tool</p>
+    <h1>Eisen-Kohlenstoff-Diagramm (EKD)</h1>
+    <p class="subtitle">Interaktives Phasendiagramm nach Standard-Werkstoffkunde</p>
   </header>
 
   <div class="container">
     <!-- Canvas Bereich -->
     <div class="card canvas-container">
-      <canvas id="diagram" width="650" height="500"></canvas>
+      <canvas id="diagram" width="850" height="620"></canvas>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#000;"></div> Meta-stabil (Fe-Fe₃C)</div>
+        <div class="legend-item"><div class="legend-line" style="background:#dc2626; border-top: 2px dashed #dc2626; height:0;"></div> Stabil (Fe-C Graphit)</div>
+      </div>
     </div>
 
     <!-- Informations-Panel -->
     <div class="card sidebar">
       <div id="status" class="status-badge status-active">● Live-Verfolgung</div>
       
-      <h2>Messwerte</h2>
+      <h2>Messwerte & Zusammensetzung</h2>
       <table>
         <thead>
           <tr>
@@ -165,11 +200,11 @@
         </thead>
         <tbody>
           <tr>
-            <td>Kohlenstoff (C)</td>
+            <td>Kohlenstoffgehalt (C)</td>
             <td id="val-c">0.00 Gew.-%</td>
           </tr>
           <tr>
-            <td>Eisen (Fe)</td>
+            <td>Eisengehalt (Fe)</td>
             <td id="val-fe">100.00 Gew.-%</td>
           </tr>
           <tr>
@@ -177,17 +212,23 @@
             <td id="val-temp">0 °C</td>
           </tr>
           <tr>
-            <td>Gefügebezeichnung</td>
-            <td id="val-phase" style="font-size: 0.95rem; font-weight: 600; color: var(--accent);">-</td>
+            <td>Werkstoffgruppe</td>
+            <td id="val-group">-</td>
           </tr>
         </tbody>
       </table>
 
+      <div class="phase-display">
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px;">Gefüge / Phasenbereich:</div>
+        <div id="val-phase">-</div>
+      </div>
+
       <div class="info-box">
-        <strong>Bedienung:</strong>
+        <strong>Bedienung & Hinweise:</strong>
         <ul>
-          <li><strong>Maus bewegen:</strong> Messpunkt positionieren</li>
-          <li><strong>Klick:</strong> Punkt einfrieren / wieder freigeben</li>
+          <li><strong>Maus bewegen:</strong> Position im Diagramm abfahren</li>
+          <li><strong>Klick:</strong> Messpunkt einfrieren / wieder freigeben</li>
+          <li>Enthält sowohl das <strong>metastabile System</strong> (Fe-Fe₃C) als auch das <strong>stabile System</strong> (Fe-C, rot gestrichelt).</li>
         </ul>
       </div>
     </div>
@@ -198,31 +239,46 @@
     const ctx = canvas.getContext('2d');
 
     // Diagrammgrenzen & Ränder
-    const margin = { top: 40, right: 30, bottom: 50, left: 60 };
+    const margin = { top: 40, right: 40, bottom: 60, left: 65 };
     const width = canvas.width - margin.left - margin.right;
     const height = canvas.height - margin.top - margin.bottom;
 
     // Wertebereich
     const minC = 0, maxC = 6.67;
-    const minT = 400, maxT = 1600;
+    const minT = 0, maxT = 1600;
 
     // Zustand
     let isFrozen = false;
     let currentC = 0.8;
     let currentT = 900;
 
-    // Wichtige Punkte (C-Gehalt in %, Temp in °C)
+    // Punkte Metastabil (Fe-Fe3C)
     const P = {
-      A: { c: 0, t: 1538 },
-      N: { c: 0, t: 1394 },
-      G: { c: 0, t: 912 },
-      P: { c: 0.022, t: 727 },
-      E: { c: 2.14, t: 1147 },
-      S: { c: 0.76, t: 727 },
-      C: { c: 4.3, t: 1147 },
+      A: { c: 0, t: 1536 },
+      B: { c: 0.53, t: 1493 },
+      C: { c: 4.30, t: 1147 },
       D: { c: 6.67, t: 1320 },
-      K: { c: 6.67, t: 727 },
-      L: { c: 6.67, t: 0 }
+      E: { c: 2.06, t: 1147 },
+      F: { c: 6.67, t: 1147 },
+      G: { c: 0, t: 911 },
+      H: { c: 0.09, t: 1493 },
+      J: { c: 0.17, t: 1493 },
+      K: { c: 6.67, t: 723 },
+      N: { c: 0, t: 1392 },
+      P: { c: 0.02, t: 723 },
+      Q: { c: 0.00, t: 20 },
+      S: { c: 0.80, t: 723 },
+      M: { c: 0, t: 769 },
+      O: { c: 0.45, t: 769 }
+    };
+
+    // Punkte Stabil (Fe-C Graphit)
+    const Ps = {
+      C_prime: { c: 4.25, t: 1153 },
+      E_prime: { c: 2.08, t: 1153 },
+      F_prime: { c: 6.67, t: 1153 },
+      S_prime: { c: 0.68, t: 738 },
+      K_prime: { c: 6.67, t: 738 }
     };
 
     // Umrechnung Koordinaten <-> Daten
@@ -241,26 +297,25 @@
       return Math.max(minT, Math.min(maxT, t));
     }
 
-    // Zeichnet das Phasendiagramm
     function drawDiagram() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Achsen & Gitter
-      ctx.strokeStyle = '#cbd5e1';
+      ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 1;
       
       // Horizontal-Linien (Temperatur)
-      for (let t = 500; t <= 1500; t += 100) {
+      for (let t = 200; t <= 1600; t += 200) {
         let y = tToY(t);
         ctx.beginPath();
         ctx.moveTo(margin.left, y);
         ctx.lineTo(margin.left + width, y);
         ctx.stroke();
 
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '10px sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px sans-serif';
         ctx.textAlign = 'right';
-        ctx.fillText(t + '°C', margin.left - 8, y + 3);
+        ctx.fillText(t + ' °C', margin.left - 8, y + 4);
       }
 
       // Vertikal-Linien (C-Gehalt)
@@ -271,67 +326,164 @@
         ctx.lineTo(x, margin.top + height);
         ctx.stroke();
 
-        ctx.fillStyle = '#94a3b8';
+        ctx.fillStyle = '#64748b';
         ctx.textAlign = 'center';
-        ctx.fillText(c + '%', x, margin.top + height + 15);
+        ctx.fillText(c + ' %', x, margin.top + height + 18);
       }
 
-      // Hauptlinien des Phasendiagramms
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 2;
-
-      const lines = [
-        [P.A, P.N], [P.N, P.G], [P.G, P.P], [P.P, {c:0, t:727}],
-        [P.A, P.E], [P.E, P.C], [P.C, P.D], // Liquidus / Solidus
-        [P.G, P.S], [P.E, P.S], [P.S, P.P], // A3, Acm, A1
-        [{c:0, t:727}, {c:6.67, t:727}],    // Eutektoide Linie (727°C)
-        [P.E, {c:6.67, t:1147}],             // Eutektische Linie (1147°C)
-        [P.P, {c:0.022, t:400}],
-        [P.S, {c:0.76, t:400}],
-        [P.D, P.K]
+      // Hilfslinien gestrichelt für key C-Werte
+      const keyC = [
+        { c: 0.02, label: '0.02%' },
+        { c: 0.8, label: '0.8%' },
+        { c: 2.06, label: '2.06%' },
+        { c: 4.3, label: '4.3%' },
+        { c: 6.67, label: '6.67%' }
       ];
 
-      lines.forEach(([start, end]) => {
+      ctx.strokeStyle = '#94a3b8';
+      ctx.setLineDash([2, 4]);
+      keyC.forEach(item => {
+        let x = cToX(item.c);
+        ctx.beginPath();
+        ctx.moveTo(x, margin.top);
+        ctx.lineTo(x, margin.top + height);
+        ctx.stroke();
+
+        ctx.fillStyle = '#475569';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(item.label, x, margin.top + height + 32);
+      });
+      ctx.setLineDash([]);
+
+      // Magnetische Umwandlung A2 (769 °C) Linie MO
+      ctx.strokeStyle = '#94a3b8';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(cToX(0), tToY(769));
+      ctx.lineTo(cToX(0.45), tToY(769));
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 1. Metastabiles System (Schwarz)
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.8;
+
+      const metaLines = [
+        // Peritektischer Bereich
+        [P.A, P.H], [P.A, P.B], [P.H, P.J], [P.B, P.J], [P.H, {c:0, t:1493}], [P.N, P.J],
+        // Liquidus / Solidus
+        [P.B, P.C], [P.C, P.D], [P.J, P.E], [P.E, P.C], [P.C, P.F],
+        // Austenit Entmischung (A3 / Acm / A1)
+        [P.N, P.G], [P.G, P.P], [P.G, P.S], [P.E, P.S], [P.P, {c:0, t:723}], [{c:0, t:723}, P.K],
+        // Ferrit Löslicheit / Zementit
+        [P.P, P.Q], [P.D, P.K], [P.K, {c:6.67, t:0}]
+      ];
+
+      metaLines.forEach(([start, end]) => {
         ctx.beginPath();
         ctx.moveTo(cToX(start.c), tToY(start.t));
         ctx.lineTo(cToX(end.c), tToY(end.t));
         ctx.stroke();
       });
 
-      // Phasenbeschriftungen im Diagramm
-      ctx.fillStyle = '#64748b';
+      // 2. Stabiles System (Rot gestrichelt)
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 4]);
+
+      ctx.beginPath();
+      // E'-C'-F' Linie (1153°C)
+      ctx.moveTo(cToX(Ps.E_prime.c), tToY(Ps.E_prime.t));
+      ctx.lineTo(cToX(Ps.F_prime.c), tToY(Ps.F_prime.t));
+      // S'-K' Linie (738°C)
+      ctx.moveTo(cToX(0), tToY(Ps.S_prime.t));
+      ctx.lineTo(cToX(Ps.K_prime.c), tToY(Ps.K_prime.t));
+      // Kurve G -> S'
+      ctx.moveTo(cToX(P.G.c), tToY(P.G.t));
+      ctx.lineTo(cToX(Ps.S_prime.c), tToY(Ps.S_prime.t));
+      // Kurve E' -> S'
+      ctx.moveTo(cToX(Ps.E_prime.c), tToY(Ps.E_prime.t));
+      ctx.lineTo(cToX(Ps.S_prime.c), tToY(Ps.S_prime.t));
+      // Schmelzlinie ab C' nach oben
+      ctx.moveTo(cToX(Ps.C_prime.c), tToY(Ps.C_prime.t));
+      ctx.lineTo(cToX(5.5), tToY(1600));
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+
+      // Punktbeschriftungen im Diagramm
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 11px sans-serif';
+      
+      const labels = [
+        { text: 'A 1536°C', p: P.A, dx: 8, dy: -2 },
+        { text: 'N 1392°C', p: P.N, dx: 8, dy: 10 },
+        { text: 'G 911°C', p: P.G, dx: 8, dy: -2 },
+        { text: 'P 723°C', p: P.P, dx: -42, dy: 12 },
+        { text: 'S 723°C', p: P.S, dx: -5, dy: 15 },
+        { text: 'E 1147°C', p: P.E, dx: 5, dy: 12 },
+        { text: 'C 1147°C', p: P.C, dx: -10, dy: 15 },
+        { text: 'D 1320°C', p: P.D, dx: -55, dy: -5 },
+        { text: 'F', p: P.F, dx: 5, dy: 12 },
+        { text: 'K', p: P.K, dx: 5, dy: 12 },
+        { text: 'E\' 1153°C', p: Ps.E_prime, dx: -15, dy: -8, color: '#dc2626' },
+        { text: 'C\'', p: Ps.C_prime, dx: -5, dy: -8, color: '#dc2626' },
+        { text: 'S\' 738°C', p: Ps.S_prime, dx: -15, dy: -8, color: '#dc2626' }
+      ];
+
+      labels.forEach(lbl => {
+        ctx.fillStyle = lbl.color || '#0f172a';
+        ctx.fillText(lbl.text, cToX(lbl.p.c) + lbl.dx, tToY(lbl.p.t) + lbl.dy);
+      });
+
+      // Regions-Beschriftungen
+      ctx.fillStyle = '#334155';
       ctx.font = 'bold 12px sans-serif';
       ctx.textAlign = 'center';
 
-      ctx.fillText('Schmelze (L)', cToX(3), tToY(1500));
-      ctx.fillText('Austenit (γ)', cToX(1.0), tToY(1000));
-      ctx.fillText('Ferrit (α)', cToX(0.2), tToY(600));
-      ctx.fillText('α + Fe₃C', cToX(0.4), tToY(500));
-      ctx.fillText('γ + Fe₃C', cToX(2.5), tToY(900));
-      ctx.fillText('Schmelze + Fe₃C', cToX(5.2), tToY(1300));
-      ctx.fillText('Schmelze + γ', cToX(2.2), tToY(1350));
+      ctx.fillText('Schmelze (S)', cToX(3.2), tToY(1450));
+      ctx.fillText('Austenit (γ)', cToX(0.8), tToY(1000));
+      ctx.fillText('Schmelze (S) + Austenit (γ)', cToX(2.3), tToY(1280));
+      ctx.fillText('Schmelze + Fe₃Cₚᵣᵢₘäᵣ', cToX(5.3), tToY(1280));
 
-      // Wichtige Punkte markieren
-      ctx.fillStyle = '#ef4444';
-      [P.S, P.C, P.E].forEach(pt => {
-        ctx.beginPath();
-        ctx.arc(cToX(pt.c), tToY(pt.t), 4, 0, Math.PI * 2);
-        ctx.fill();
-      });
+      ctx.font = '11px sans-serif';
+      ctx.fillText('Austenit (γ) + Fe₃Cₛₑₖᵤₙdäᵣ', cToX(1.4), tToY(880));
+      ctx.fillText('Austenit (γ) + Ledeburit I + Fe₃Cₛₑₖᵤₙdäᵣ', cToX(3.1), tToY(950));
+      ctx.fillText('Ledeburit I + Fe₃Cₚᵣᵢₘäᵣ', cToX(5.3), tToY(950));
+
+      ctx.fillText('α-Ferrit + Perlit', cToX(0.4), tToY(500));
+      ctx.fillText('Perlit + Fe₃Cₛₑₖᵤₙdäᵣ', cToX(1.4), tToY(500));
+      ctx.fillText('Perlit + Ledeburit II + Fe₃Cₛₑₖᵤₙdäᵣ', cToX(3.1), tToY(500));
+      ctx.fillText('Ledeburit II + Fe₃Cₚᵣᵢₘäᵣ', cToX(5.3), tToY(500));
+
+      // Stahl / Gusseisen Kennzeichnung unten
+      let x0 = cToX(0), x2 = cToX(2.06), x6 = cToX(6.67);
+      let yBottom = margin.top + height + 48;
+
+      ctx.fillStyle = '#475569';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('Stahl', (x0 + x2) / 2, yBottom);
+      ctx.fillText('Gusseisen', (x2 + x6) / 2, yBottom);
 
       // Achsenbeschriftung
       ctx.fillStyle = '#0f172a';
-      ctx.font = '12px sans-serif';
+      ctx.font = 'bold 12px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Kohlenstoffgehalt [Gew.-%]', margin.left + width / 2, margin.top + height + 38);
+      ctx.fillText('Kohlenstoffgehalt [Gew.-% C]', margin.left + width / 2, margin.top + height + 48);
+
+      ctx.save();
+      ctx.translate(18, margin.top + height / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Temperatur [°C]', 0, 0);
+      ctx.restore();
 
       // Fadenkreuz & Aktueller Punkt
       const px = cToX(currentC);
       const py = tToY(currentT);
 
-      // Fadenkreuz
       ctx.strokeStyle = isFrozen ? '#d97706' : '#2563eb';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.2;
       ctx.setLineDash([4, 4]);
 
       ctx.beginPath();
@@ -340,9 +492,9 @@
       ctx.moveTo(margin.left, py);
       ctx.lineTo(margin.left + width, py);
       ctx.stroke();
-      ctx.setLineDash([]); // Reset
+      ctx.setLineDash([]);
 
-      // Punkt selbst
+      // Punkt markieren
       ctx.fillStyle = isFrozen ? '#d97706' : '#2563eb';
       ctx.beginPath();
       ctx.arc(px, py, 6, 0, Math.PI * 2);
@@ -352,40 +504,68 @@
       ctx.stroke();
     }
 
-    // Vereinfachte Bestimmung der Phasenregion
-    function getPhaseName(c, t) {
-      if (t > 1538 - c * 90 && t > 1147 + (c-2.14)*60) return "Schmelze (L)";
-      if (t < 727) {
-        if (c < 0.022) return "Ferrit (α)";
-        if (c < 0.76) return "Ferrit (α) + Perlit";
-        if (c === 0.76) return "Perlit (Eutektoid)";
-        if (c < 2.14) return "Perlit + Sekundärzementit";
-        if (c < 4.3) return "Ledebrut II + Perlit";
-        return "Ledebrut II + Primärzementit";
+    // Exakte Bestimmung der Phasen und Gefügezustände
+    function getAnalysis(c, t) {
+      let group = "";
+      let phase = "";
+
+      // Werkstoffgruppe
+      if (c <= 2.06) {
+        if (c < 0.8) group = "Untereutektoider Stahl";
+        else if (c === 0.8) group = "Eutektoider Stahl";
+        else group = "Übereutektoider Stahl";
+      } else {
+        if (c < 4.3) group = "Untereutektoides Gusseisen";
+        else if (c === 4.3) group = "Eutektoides Gusseisen";
+        else group = "Übereutektoides Gusseisen";
       }
-      if (t >= 727 && t <= 1147) {
-        if (c < 0.76 && t < 912 - c * 240) return "Austenit (γ) + Ferrit (α)";
-        if (c < 2.14) return "Austenit (γ)";
-        if (c >= 2.14 && c < 4.3) return "Austenit + Ledeburit I";
-        return "Ledeburit I + Primärzementit";
+
+      // Temperaturbereiche & Phasen
+      if (t > 1536) {
+        phase = "Homogene Schmelze (S)";
+      } else if (t >= 1147) {
+        // Flüssig-Fest-Bereich
+        if (c < 0.09 && t > 1493) phase = "Schmelze (S) + δ-Ferrit";
+        else if (c < 2.06 && t > 1147 + (c - 0.09) * 20) phase = "Schmelze (S) + Austenit (γ)";
+        else if (c >= 2.06 && c <= 4.3) phase = "Schmelze (S) + Austenit (γ)";
+        else phase = "Schmelze (S) + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
+      } else if (t >= 723 && t < 1147) {
+        // Gebiete zwischen 723°C und 1147°C
+        if (c < 0.02) phase = "Austenit (γ) / α-Ferrit";
+        else if (c < 0.8 && t < 911 - (c / 0.8) * (911 - 723)) phase = "Austenit (γ) + α-Ferrit";
+        else if (c <= 2.06) phase = "Austenit (γ) + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
+        else if (c <= 4.3) phase = "Austenit (γ) + Ledeburit I + Fe₃Cₛₑₖᵤₙdäᵣ";
+        else phase = "Ledeburit I + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
+      } else {
+        // Unterhalb A1 (723 °C) - Raumtemperaturbereich
+        if (c < 0.02) phase = "α-Ferrit + Tertiärzementit (Fe₃Cₜₑᵣₜᵢäᵣ)";
+        else if (c < 0.8) phase = "α-Ferrit + Perlit + Fe₃Cₜₑᵣₜᵢäᵣ";
+        else if (Math.abs(c - 0.8) < 0.02) phase = "100% Perlit (Eutektoid)";
+        else if (c <= 2.06) phase = "Perlit + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
+        else if (c < 4.3) phase = "Perlit + Ledeburit II + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
+        else if (Math.abs(c - 4.3) < 0.05) phase = "Ledeburit II (Eutektikum)";
+        else phase = "Ledeburit II + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
       }
-      return "Austenit (γ) + Schmelze";
+
+      return { group, phase };
     }
 
-    // Aktualisiert die Seitenelemente
     function updateUI() {
       const fe = 100 - currentC;
       document.getElementById('val-c').innerText = currentC.toFixed(2) + ' Gew.-%';
       document.getElementById('val-fe').innerText = fe.toFixed(2) + ' Gew.-%';
       document.getElementById('val-temp').innerText = Math.round(currentT) + ' °C';
-      document.getElementById('val-phase').innerText = getPhaseName(currentC, currentT);
+
+      const analysis = getAnalysis(currentC, currentT);
+      document.getElementById('val-group').innerText = analysis.group;
+      document.getElementById('val-phase').innerText = analysis.phase;
 
       const statusEl = document.getElementById('status');
       if (isFrozen) {
-        statusEl.innerText = '❄️ Punkt eingefroren';
+        statusEl.innerText = '❄️ Punkt eingefroren (Klick zum Freigeben)';
         statusEl.className = 'status-badge status-frozen';
       } else {
-        statusEl.innerText = '● Live-Verfolgung';
+        statusEl.innerText = '● Live-Verfolgung (Klick zum Einfrieren)';
         statusEl.className = 'status-badge status-active';
       }
 
