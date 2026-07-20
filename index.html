@@ -73,6 +73,8 @@
       display: block;
       cursor: crosshair;
       background-color: #ffffff;
+      width: 850px;
+      height: 620px;
     }
 
     .sidebar {
@@ -179,7 +181,7 @@
   <div class="container">
     <!-- Canvas Bereich -->
     <div class="card canvas-container">
-      <canvas id="diagram" width="850" height="620"></canvas>
+      <canvas id="diagram"></canvas>
       <div class="legend">
         <div class="legend-item"><div class="legend-line" style="background:#000;"></div> Meta-stabil (Fe-Fe₃C)</div>
         <div class="legend-item"><div class="legend-line" style="background:#dc2626; border-top: 2px dashed #dc2626; height:0;"></div> Stabil (Fe-C Graphit)</div>
@@ -202,10 +204,6 @@
           <tr>
             <td>Kohlenstoffgehalt (C)</td>
             <td id="val-c">0.00 Gew.-%</td>
-          </tr>
-          <tr>
-            <td>Eisengehalt (Fe)</td>
-            <td id="val-fe">100.00 Gew.-%</td>
           </tr>
           <tr>
             <td>Temperatur</td>
@@ -238,10 +236,18 @@
     const canvas = document.getElementById('diagram');
     const ctx = canvas.getContext('2d');
 
-    // Diagrammgrenzen & Ränder
+    // Erhöhung der Auflösung für High-DPI / Retina Display
+    const logicalWidth = 850;
+    const logicalHeight = 620;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = logicalWidth * dpr;
+    canvas.height = logicalHeight * dpr;
+
+    // Diagrammgrenzen & Ränder (auf logischer Ebene)
     const margin = { top: 40, right: 40, bottom: 60, left: 65 };
-    const width = canvas.width - margin.left - margin.right;
-    const height = canvas.height - margin.top - margin.bottom;
+    const width = logicalWidth - margin.left - margin.right;
+    const height = logicalHeight - margin.top - margin.bottom;
 
     // Wertebereich
     const minC = 0, maxC = 6.67;
@@ -281,6 +287,12 @@
       K_prime: { c: 6.67, t: 738 }
     };
 
+    // Linear-Interpolation für Kurven
+    function interp(x, x0, y0, x1, y1) {
+      if (x1 === x0) return y0;
+      return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+    }
+
     // Umrechnung Koordinaten <-> Daten
     function cToX(c) {
       return margin.left + ((c - minC) / (maxC - minC)) * width;
@@ -298,7 +310,9 @@
     }
 
     function drawDiagram() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
       // Achsen & Gitter
       ctx.strokeStyle = '#e2e8f0';
@@ -376,7 +390,7 @@
         [P.B, P.C], [P.C, P.D], [P.J, P.E], [P.E, P.C], [P.C, P.F],
         // Austenit Entmischung (A3 / Acm / A1)
         [P.N, P.G], [P.G, P.P], [P.G, P.S], [P.E, P.S], [P.P, {c:0, t:723}], [{c:0, t:723}, P.K],
-        // Ferrit Löslicheit / Zementit
+        // Ferrit Löslichkeit / Zementit
         [P.P, P.Q], [P.D, P.K], [P.K, {c:6.67, t:0}]
       ];
 
@@ -393,19 +407,14 @@
       ctx.setLineDash([5, 4]);
 
       ctx.beginPath();
-      // E'-C'-F' Linie (1153°C)
       ctx.moveTo(cToX(Ps.E_prime.c), tToY(Ps.E_prime.t));
       ctx.lineTo(cToX(Ps.F_prime.c), tToY(Ps.F_prime.t));
-      // S'-K' Linie (738°C)
       ctx.moveTo(cToX(0), tToY(Ps.S_prime.t));
       ctx.lineTo(cToX(Ps.K_prime.c), tToY(Ps.K_prime.t));
-      // Kurve G -> S'
       ctx.moveTo(cToX(P.G.c), tToY(P.G.t));
       ctx.lineTo(cToX(Ps.S_prime.c), tToY(Ps.S_prime.t));
-      // Kurve E' -> S'
       ctx.moveTo(cToX(Ps.E_prime.c), tToY(Ps.E_prime.t));
       ctx.lineTo(cToX(Ps.S_prime.c), tToY(Ps.S_prime.t));
-      // Schmelzlinie ab C' nach oben
       ctx.moveTo(cToX(Ps.C_prime.c), tToY(Ps.C_prime.t));
       ctx.lineTo(cToX(5.5), tToY(1600));
       ctx.stroke();
@@ -502,9 +511,11 @@
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
       ctx.stroke();
+
+      ctx.restore();
     }
 
-    // Exakte Bestimmung der Phasen und Gefügezustände
+    // Exakte Bestimmung der Phasen und Zweiphasengebiete
     function getAnalysis(c, t) {
       let group = "";
       let phase = "";
@@ -520,40 +531,89 @@
         else group = "Übereutektoides Gusseisen";
       }
 
-      // Temperaturbereiche & Phasen
-      if (t > 1536) {
+      // Phasengrenzen (Temperatur-Schwellen in Abhängigkeit von c)
+      const tLiquidus = (c <= 0.53) ? interp(c, 0, P.A.t, 0.53, P.B.t) :
+                        (c <= 4.30) ? interp(c, 0.53, P.B.t, 4.30, P.C.t) :
+                        interp(c, 4.30, P.C.t, 6.67, P.D.t);
+
+      const tSolidus = (c <= 0.09) ? interp(c, 0, P.A.t, 0.09, P.H.t) :
+                       (c <= 0.17) ? 1493 :
+                       (c <= 2.06) ? interp(c, 0.17, P.J.t, 2.06, P.E.t) :
+                       1147;
+
+      const tAr3 = (c <= 0.8) ? interp(c, 0, P.G.t, 0.8, P.S.t) : 0;
+      const tAcm = (c > 0.8 && c <= 2.06) ? interp(c, 0.8, P.S.t, 2.06, P.E.t) : 0;
+      const tAr1 = (c <= 0.02) ? interp(c, 0, P.G.t, 0.02, P.P.t) : 723;
+      const tSolvusPQ = (c <= 0.02) ? interp(c, 0, P.Q.t, 0.02, P.P.t) : 0;
+
+      // Logik zur Phasenbestimmung
+      if (t >= tLiquidus) {
         phase = "Homogene Schmelze (S)";
-      } else if (t >= 1147) {
-        // Flüssig-Fest-Bereich
-        if (c < 0.09 && t > 1493) phase = "Schmelze (S) + δ-Ferrit";
-        else if (c < 2.06 && t > 1147 + (c - 0.09) * 20) phase = "Schmelze (S) + Austenit (γ)";
-        else if (c >= 2.06 && c <= 4.3) phase = "Schmelze (S) + Austenit (γ)";
-        else phase = "Schmelze (S) + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
-      } else if (t >= 723 && t < 1147) {
-        // Gebiete zwischen 723°C und 1147°C
-        if (c < 0.02) phase = "Austenit (γ) / α-Ferrit";
-        else if (c < 0.8 && t < 911 - (c / 0.8) * (911 - 723)) phase = "Austenit (γ) + α-Ferrit";
-        else if (c <= 2.06) phase = "Austenit (γ) + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
-        else if (c <= 4.3) phase = "Austenit (γ) + Ledeburit I + Fe₃Cₛₑₖᵤₙdäᵣ";
-        else phase = "Ledeburit I + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
-      } else {
-        // Unterhalb A1 (723 °C) - Raumtemperaturbereich
-        if (c < 0.02) phase = "α-Ferrit + Tertiärzementit (Fe₃Cₜₑᵣₜᵢäᵣ)";
-        else if (c < 0.8) phase = "α-Ferrit + Perlit + Fe₃Cₜₑᵣₜᵢäᵣ";
-        else if (Math.abs(c - 0.8) < 0.02) phase = "100% Perlit (Eutektoid)";
-        else if (c <= 2.06) phase = "Perlit + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
-        else if (c < 4.3) phase = "Perlit + Ledeburit II + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
-        else if (Math.abs(c - 4.3) < 0.05) phase = "Ledeburit II (Eutektikum)";
-        else phase = "Ledeburit II + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
+      } 
+      // Schmelze + Festphase (Zweiphasengebiete oben)
+      else if (t < tLiquidus && t >= tSolidus) {
+        if (c < 0.09 && t >= 1493) {
+          phase = "δ-Ferrit + Schmelze (S)";
+        } else if (c >= 0.09 && c <= 0.17 && t >= 1493) {
+          phase = "Peritektikum: δ-Ferrit + Schmelze (S)";
+        } else if (c > 4.30) {
+          phase = "Schmelze (S) + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
+        } else {
+          phase = "Schmelze (S) + Austenit (γ)";
+        }
+      } 
+      // Homogener Austenit
+      else if (t < tSolidus && t >= 1147 && c <= 2.06) {
+        if (c < 0.09 && t > 1392) phase = "δ-Ferrit";
+        else if (c < 0.17 && t > 1493) phase = "δ-Ferrit + Austenit (γ)";
+        else phase = "Homogener Austenit (γ)";
+      }
+      // Erstarrte Gusseisenbereiche oberhalb 723°C
+      else if (t >= 1147 && c > 2.06) {
+        phase = "Schmelze (S) + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
+      }
+      // Mittlerer Temperaturbereich (723°C bis 1147°C)
+      else if (t >= 723 && t < 1147) {
+        if (c <= 0.02) {
+          if (t >= tAr1) phase = "Austenit (γ) + α-Ferrit";
+          else phase = "α-Ferrit";
+        } else if (c < 0.8) {
+          if (t >= tAr3) phase = "Homogener Austenit (γ)";
+          else phase = "Zweiphasengebiet: Austenit (γ) + α-Ferrit";
+        } else if (c <= 2.06) {
+          if (t >= tAcm) phase = "Homogener Austenit (γ)";
+          else phase = "Zweiphasengebiet: Austenit (γ) + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
+        } else if (c <= 4.3) {
+          phase = "Austenit (γ) + Ledeburit I + Fe₃Cₛₑₖᵤₙdäᵣ";
+        } else {
+          phase = "Ledeburit I + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
+        }
+      } 
+      // Unterhalb A1 (723 °C) - Raumtemperaturbereich
+      else {
+        if (c <= 0.02) {
+          if (t < tSolvusPQ) phase = "α-Ferrit + Tertiärzementit (Fe₃Cₜₑᵣₜᵢäᵣ)";
+          else phase = "Homogener α-Ferrit";
+        } else if (c < 0.8) {
+          phase = "α-Ferrit + Perlit + Fe₃Cₜₑᵣₜᵢäᵣ";
+        } else if (Math.abs(c - 0.8) < 0.02) {
+          phase = "100% Perlit (Eutektoid)";
+        } else if (c <= 2.06) {
+          phase = "Perlit + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
+        } else if (c < 4.3) {
+          phase = "Perlit + Ledeburit II + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
+        } else if (Math.abs(c - 4.3) < 0.05) {
+          phase = "Ledeburit II (Eutektikum)";
+        } else {
+          phase = "Ledeburit II + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
+        }
       }
 
       return { group, phase };
     }
 
     function updateUI() {
-      const fe = 100 - currentC;
       document.getElementById('val-c').innerText = currentC.toFixed(2) + ' Gew.-%';
-      document.getElementById('val-fe').innerText = fe.toFixed(2) + ' Gew.-%';
       document.getElementById('val-temp').innerText = Math.round(currentT) + ' °C';
 
       const analysis = getAnalysis(currentC, currentT);
