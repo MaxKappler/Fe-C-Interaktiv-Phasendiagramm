@@ -1,658 +1,1958 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eisen-Kohlenstoff-Phasendiagramm</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interaktives Eisen-Kohlenstoff-Phasendiagramm mit Hebelgesetz">
+  <title>Eisen–Kohlenstoff-Phasendiagramm</title>
+
   <style>
     :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #cbd5e1;
-      --accent: #2563eb;
-      --accent-frozen: #d97706;
-      --stable-color: #dc2626;
+      color-scheme: light;
+      --bg: #f3eee6;
+      --surface: #fffdf8;
+      --surface-2: #e9e2d7;
+      --ink: #17221c;
+      --muted: #647168;
+      --line: #263b32;
+      --grid: #d8d2c8;
+      --accent: #b64d36;
+      --accent-2: #1f6d5a;
+      --liquid: #f4c56f;
+      --delta: #9fc9dc;
+      --gamma: #e69473;
+      --alpha: #8fc2a6;
+      --alpha-gamma: #d8c58b;
+      --gamma-cementite: #b7a2c7;
+      --alpha-cementite: #9fb8b0;
+      --gamma-liquid: #efaa70;
+      --liquid-cementite: #d5b17b;
+      --shadow: 0 18px 50px rgba(39, 48, 42, .10);
     }
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(182, 77, 54, .10), transparent 35rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    header {
-      text-align: center;
-      margin-bottom: 1.5rem;
+    button,
+    input {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1500px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 48px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
     }
 
     h1 {
-      font-size: 1.8rem;
-      margin-bottom: 0.25rem;
-    }
-
-    p.subtitle {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    .container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      justify-content: center;
-      align-items: flex-start;
-      max-width: 1350px;
-      width: 100%;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.25rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-
-    .canvas-container {
-      position: relative;
-    }
-
-    canvas {
-      display: block;
-      cursor: crosshair;
-      background-color: #ffffff;
-      width: 850px;
-      height: 620px;
-    }
-
-    .sidebar {
-      min-width: 340px;
-      flex: 1;
-      max-width: 420px;
-    }
-
-    .status-badge {
-      display: inline-block;
-      padding: 0.35rem 0.85rem;
-      border-radius: 9999px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-    }
-
-    .status-active {
-      background-color: #dbeafe;
-      color: #1e40af;
-    }
-
-    .status-frozen {
-      background-color: #fef3c7;
-      color: #92400e;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 0.5rem;
-    }
-
-    th, td {
-      text-align: left;
-      padding: 0.65rem 0.5rem;
-      border-bottom: 1px solid #f1f5f9;
-    }
-
-    th {
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    td {
+      max-width: 900px;
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.1rem, 5vw, 4.6rem);
       font-weight: 500;
-      font-size: 0.95rem;
+      line-height: .98;
+      letter-spacing: -.045em;
     }
 
-    .phase-display {
-      font-weight: 700;
-      color: #1e293b;
-      background: #f1f5f9;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border-left: 4px solid var(--accent);
-      margin-top: 1rem;
-      font-size: 0.95rem;
-      line-height: 1.4;
+    .subtitle {
+      max-width: 620px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      line-height: 1.55;
     }
 
-    .info-box {
-      margin-top: 1.25rem;
-      padding: 0.85rem;
-      background-color: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      line-height: 1.4;
-      color: var(--text-muted);
+    .system-tag {
+      flex: 0 0 auto;
+      padding: 10px 14px;
+      border: 1px solid rgba(38, 59, 50, .2);
+      border-radius: 999px;
+      background: rgba(255, 253, 248, .62);
+      color: var(--muted);
+      font-size: .86rem;
+      white-space: nowrap;
     }
 
-    .info-box ul {
-      margin-left: 1.2rem;
-      margin-top: 0.4rem;
+    .app-shell {
+      overflow: hidden;
+      border: 1px solid rgba(38, 59, 50, .16);
+      border-radius: 24px;
+      background: rgba(255, 253, 248, .92);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
     }
 
-    .legend {
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(38, 59, 50, .12);
+      background: rgba(233, 226, 215, .45);
+    }
+
+    .control label {
       display: flex;
-      gap: 1rem;
-      font-size: 0.8rem;
-      margin-top: 0.5rem;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: .84rem;
+      font-weight: 700;
     }
-    .legend-item {
+
+    output {
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .view-switch {
+      display: flex;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .view-switch button,
+    .presets button {
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    .view-switch button {
+      padding: 8px 11px;
+    }
+
+    .view-switch button[aria-pressed="true"] {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 2px 8px rgba(39, 48, 42, .09);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      min-height: 650px;
+    }
+
+    .chart-column {
+      min-width: 0;
+      padding: 18px 14px 8px 18px;
+    }
+
+    .chart-header {
       display: flex;
       align-items: center;
-      gap: 0.3rem;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 8px 10px 14px;
     }
-    .legend-line {
-      width: 16px;
+
+    .chart-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .chart-key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      color: var(--muted);
+      font-size: .76rem;
+    }
+
+    .chart-key span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chart-key i {
+      width: 22px;
       height: 2px;
+      background: var(--line);
+    }
+
+    .chart-key i.tie {
+      height: 3px;
+      background: var(--accent);
+    }
+
+    #phaseChart {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-height: 470px;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .info-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 26px 24px;
+      border-left: 1px solid rgba(38, 59, 50, .12);
+      background: rgba(233, 226, 215, .28);
+    }
+
+    .panel-kicker {
+      margin: 0 0 6px;
+      color: var(--accent);
+      font-size: .72rem;
+      font-weight: 850;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .phase-name {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 2rem;
+      font-weight: 500;
+      line-height: 1.08;
+    }
+
+    .phase-description {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.55;
+    }
+
+    .selection-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .metric {
+      padding: 13px;
+      border: 1px solid rgba(38, 59, 50, .13);
+      border-radius: 12px;
+      background: rgba(255, 253, 248, .72);
+    }
+
+    .metric span {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: .72rem;
+    }
+
+    .metric strong {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lever-card {
+      padding: 16px;
+      border-radius: 16px;
+      background: var(--ink);
+      color: #fffdf8;
+    }
+
+    .lever-card[hidden] {
+      display: none;
+    }
+
+    .lever-card h3 {
+      margin: 0 0 4px;
+      font-size: 1rem;
+    }
+
+    .lever-card > p {
+      margin: 0;
+      color: rgba(255, 255, 255, .7);
+      font-size: .76rem;
+    }
+
+    .fraction-bar {
+      display: flex;
+      overflow: hidden;
+      height: 12px;
+      margin: 15px 0 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .16);
+    }
+
+    .fraction-bar span:first-child {
+      background: #e6a35e;
+    }
+
+    .fraction-bar span:last-child {
+      background: #75b59d;
+    }
+
+    .fraction-values {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .fraction-values div:last-child {
+      text-align: right;
+    }
+
+    .fraction-values small {
+      display: block;
+      color: rgba(255, 255, 255, .66);
+    }
+
+    .fraction-values strong {
+      font-size: 1.12rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .formula {
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px solid rgba(255, 255, 255, .16);
+      color: rgba(255, 255, 255, .78);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: .7rem;
+      line-height: 1.5;
+    }
+
+    .hint {
+      margin: 0;
+      padding: 14px;
+      border: 1px dashed rgba(38, 59, 50, .25);
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.5;
+    }
+
+    .presets {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 7px;
+      margin-top: auto;
+    }
+
+    .presets span {
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .presets button {
+      padding: 9px 11px;
+      border: 1px solid rgba(38, 59, 50, .14);
+      background: rgba(255, 253, 248, .66);
+      text-align: left;
+    }
+
+    .presets button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .reaction-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      border-top: 1px solid rgba(38, 59, 50, .12);
+      background: rgba(38, 59, 50, .12);
+    }
+
+    .reaction {
+      padding: 20px 22px;
+      background: var(--surface);
+    }
+
+    .reaction span {
+      color: var(--accent);
+      font-size: .72rem;
+      font-weight: 850;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .reaction strong {
+      display: block;
+      margin: 6px 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.12rem;
+    }
+
+    .reaction p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .8rem;
+      line-height: 1.45;
+    }
+
+    .footnote {
+      margin: 18px 2px 0;
+      color: var(--muted);
+      font-size: .76rem;
+      line-height: 1.5;
+    }
+
+    .svg-axis {
+      fill: var(--muted);
+      font-size: 12px;
+    }
+
+    .svg-axis-title {
+      fill: var(--ink);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .svg-field-label {
+      fill: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      font-weight: 700;
+      paint-order: stroke;
+      stroke: rgba(255, 253, 248, .75);
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+
+    .svg-field-small {
+      font-size: 12px;
+    }
+
+    .svg-boundary {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 2.1;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .svg-grid {
+      stroke: var(--grid);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .svg-reaction {
+      stroke: var(--accent);
+      stroke-width: 2;
+      stroke-dasharray: 7 5;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .svg-keypoint {
+      fill: var(--surface);
+      stroke: var(--accent);
+      stroke-width: 2.5;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .svg-key-label {
+      fill: var(--accent);
+      font-size: 11px;
+      font-weight: 850;
+      paint-order: stroke;
+      stroke: var(--surface);
+      stroke-width: 4px;
+    }
+
+    .svg-tie {
+      stroke: var(--accent);
+      stroke-width: 3;
+      stroke-dasharray: 9 5;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .svg-crosshair {
+      stroke: var(--accent-2);
+      stroke-width: 1.4;
+      stroke-dasharray: 4 5;
+      opacity: .78;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .svg-selection {
+      fill: var(--surface);
+      stroke: var(--accent-2);
+      stroke-width: 4;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .svg-endpoint {
+      fill: var(--accent);
+      stroke: var(--surface);
+      stroke-width: 2;
+      vector-effect: non-scaling-stroke;
+    }
+
+    @media (max-width: 980px) {
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .view-switch {
+        grid-column: 1 / -1;
+        width: max-content;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .info-panel {
+        border-top: 1px solid rgba(38, 59, 50, .12);
+        border-left: 0;
+      }
+
+      .presets {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .page {
+        width: min(100% - 18px, 1500px);
+        padding-top: 22px;
+      }
+
+      .hero {
+        display: block;
+      }
+
+      .system-tag {
+        display: inline-block;
+        margin-top: 15px;
+      }
+
+      .app-shell {
+        border-radius: 17px;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+        padding: 16px;
+      }
+
+      .view-switch {
+        grid-column: auto;
+      }
+
+      .chart-column {
+        overflow-x: auto;
+        padding: 12px 4px 2px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .chart-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .chart-header,
+      #phaseChart {
+        width: 760px;
+        min-width: 760px;
+      }
+
+      #phaseChart {
+        min-height: 0;
+      }
+
+      .info-panel {
+        padding: 22px 18px;
+      }
+
+      .presets {
+        grid-template-columns: 1fr;
+      }
+
+      .reaction-strip {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .svg-selection,
+      .svg-tie,
+      .svg-crosshair,
+      .svg-endpoint {
+        transition: all 140ms ease-out;
+      }
     }
   </style>
 </head>
+
 <body>
-
-  <header>
-    <h1>Eisen-Kohlenstoff-Diagramm (EKD)</h1>
-    <p class="subtitle">Interaktives Phasendiagramm nach Standard-Werkstoffkunde</p>
-  </header>
-
-  <div class="container">
-    <!-- Canvas Bereich -->
-    <div class="card canvas-container">
-      <canvas id="diagram"></canvas>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-line" style="background:#000;"></div> Meta-stabil (Fe-Fe₃C)</div>
-        <div class="legend-item"><div class="legend-line" style="background:#dc2626; border-top: 2px dashed #dc2626; height:0;"></div> Stabil (Fe-C Graphit)</div>
-      </div>
-    </div>
-
-    <!-- Informations-Panel -->
-    <div class="card sidebar">
-      <div id="status" class="status-badge status-active">● Live-Verfolgung</div>
-      
-      <h2>Messwerte & Zusammensetzung</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Parameter</th>
-            <th>Wert</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Kohlenstoffgehalt (C)</td>
-            <td id="val-c">0.00 Gew.-%</td>
-          </tr>
-          <tr>
-            <td>Temperatur</td>
-            <td id="val-temp">0 °C</td>
-          </tr>
-          <tr>
-            <td>Werkstoffgruppe</td>
-            <td id="val-group">-</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="phase-display">
-        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px;">Gefüge / Phasenbereich:</div>
-        <div id="val-phase">-</div>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Werkstoffkunde · Interaktives Lernmodell</p>
+        <h1>Eisen–Kohlenstoff-<br>Phasendiagramm</h1>
+        <p class="subtitle">
+          Wähle Kohlenstoffgehalt und Temperatur. Das Diagramm zeigt
+          das Phasengebiet, eine Konode und – wo anwendbar – die
+          Phasenanteile nach dem Hebelgesetz.
+        </p>
       </div>
 
-      <div class="info-box">
-        <strong>Bedienung & Hinweise:</strong>
-        <ul>
-          <li><strong>Maus bewegen:</strong> Position im Diagramm abfahren</li>
-          <li><strong>Klick:</strong> Messpunkt einfrieren / wieder freigeben</li>
-          <li>Enthält sowohl das <strong>metastabile System</strong> (Fe-Fe₃C) als auch das <strong>stabile System</strong> (Fe-C, rot gestrichelt).</li>
-        </ul>
+      <div class="system-tag">
+        Metastabiles System Fe–Fe₃C · Massen-% C
       </div>
-    </div>
-  </div>
+    </header>
+
+    <section class="app-shell"
+      aria-label="Interaktives Eisen-Kohlenstoff-Diagramm">
+
+      <div class="toolbar">
+        <div class="control">
+          <label for="carbon">
+            Kohlenstoffgehalt
+            <output id="carbonOut">0,20 M.-% C</output>
+          </label>
+
+          <input
+            id="carbon"
+            type="range"
+            min="0"
+            max="6.67"
+            value="0.20"
+            step="0.01">
+        </div>
+
+        <div class="control">
+          <label for="temperature">
+            Temperatur
+            <output id="temperatureOut">800 °C</output>
+          </label>
+
+          <input
+            id="temperature"
+            type="range"
+            min="500"
+            max="1600"
+            value="800"
+            step="1">
+        </div>
+
+        <div class="view-switch" aria-label="Diagrammansicht">
+          <button type="button" data-view="full" aria-pressed="true">
+            Gesamt
+          </button>
+
+          <button type="button" data-view="steel" aria-pressed="false">
+            Stahlbereich
+          </button>
+        </div>
+      </div>
+
+      <div class="workspace">
+        <div class="chart-column">
+          <div class="chart-header">
+            <p>
+              In die Grafik klicken oder die Regler verwenden.
+              Auf kleinen Displays horizontal verschieben.
+            </p>
+
+            <div class="chart-key" aria-hidden="true">
+              <span><i></i> Phasengrenze</span>
+              <span><i class="tie"></i> Konode</span>
+            </div>
+          </div>
+
+          <svg
+            id="phaseChart"
+            viewBox="0 0 1100 700"
+            role="img"
+            aria-labelledby="chartTitle chartDesc">
+
+            <title id="chartTitle">
+              Eisen-Kohlenstoff-Phasendiagramm
+            </title>
+
+            <desc id="chartDesc">
+              Temperatur über Kohlenstoffgehalt mit Phasenfeldern
+              und einer interaktiv gewählten Legierung.
+            </desc>
+          </svg>
+        </div>
+
+        <aside class="info-panel" aria-live="polite">
+          <div>
+            <p class="panel-kicker">Aktueller Zustand</p>
+            <h2 class="phase-name" id="phaseName">α + γ</h2>
+
+            <p class="phase-description" id="phaseDescription">
+              Zweiphasengebiet aus Ferrit und Austenit.
+            </p>
+          </div>
+
+          <div class="selection-grid">
+            <div class="metric">
+              <span>Zusammensetzung</span>
+              <strong id="metricC">0,20 % C</strong>
+            </div>
+
+            <div class="metric">
+              <span>Temperatur</span>
+              <strong id="metricT">800 °C</strong>
+            </div>
+          </div>
+
+          <div class="lever-card" id="leverCard">
+            <h3>Hebelgesetz</h3>
+
+            <p id="tieLimits">
+              Konodenenden: 0,01 bis 0,36 % C
+            </p>
+
+            <div class="fraction-bar" aria-hidden="true">
+              <span id="leftBar"></span>
+              <span id="rightBar"></span>
+            </div>
+
+            <div class="fraction-values">
+              <div>
+                <small id="leftLabel">α-Ferrit</small>
+                <strong id="leftValue">46 %</strong>
+              </div>
+
+              <div>
+                <small id="rightLabel">γ-Austenit</small>
+                <strong id="rightValue">54 %</strong>
+              </div>
+            </div>
+
+            <div class="formula" id="formulaText">
+              fα = (Cγ − C₀) / (Cγ − Cα)
+            </div>
+          </div>
+
+          <p class="hint" id="hint">
+            Die rote gestrichelte Linie ist die Konode. Ihre
+            Teilstrecken wirken wie die beiden Arme eines Hebels.
+          </p>
+
+          <div class="presets">
+            <span>Markante Punkte</span>
+
+            <button type="button" data-c="0.76" data-t="727">
+              Eutektoid · 0,76 % / 727 °C
+            </button>
+
+            <button type="button" data-c="4.30" data-t="1147">
+              Eutektisch · 4,30 % / 1147 °C
+            </button>
+
+            <button type="button" data-c="0.17" data-t="1493">
+              Peritektisch · 0,17 % / 1493 °C
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      <div class="reaction-strip">
+        <article class="reaction">
+          <span>Peritektisch · 1493 °C</span>
+          <strong>L + δ ⇌ γ</strong>
+
+          <p>
+            Reaktion im kohlenstoffarmen Bereich um
+            0,17 M.-% C.
+          </p>
+        </article>
+
+        <article class="reaction">
+          <span>Eutektisch · 1147 °C</span>
+          <strong>L ⇌ γ + Fe₃C</strong>
+
+          <p>
+            Bei 4,30 M.-% C entsteht das eutektische
+            Gefüge Ledeburit.
+          </p>
+        </article>
+
+        <article class="reaction">
+          <span>Eutektoid · 727 °C</span>
+          <strong>γ ⇌ α + Fe₃C</strong>
+
+          <p>
+            Bei 0,76 M.-% C entsteht das eutektoide
+            Gefüge Perlit.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <p class="footnote">
+      Didaktisch vereinfachte Darstellung des metastabilen
+      Fe–Fe₃C-Systems. Phasengrenzen sind interpoliert; für
+      Berechnung, Normung oder Prozessauslegung sind verifizierte
+      Fachdaten zu verwenden. Das Hebelgesetz liefert Phasenanteile,
+      nicht automatisch Gefügebestandteile.
+    </p>
+  </main>
 
   <script>
-    const canvas = document.getElementById('diagram');
-    const ctx = canvas.getContext('2d');
+    (() => {
+      "use strict";
 
-    // Erhöhung der Auflösung für High-DPI / Retina Display
-    const logicalWidth = 850;
-    const logicalHeight = 620;
-    const dpr = window.devicePixelRatio || 1;
+      const svg = document.getElementById("phaseChart");
+      const carbon = document.getElementById("carbon");
+      const temperature = document.getElementById("temperature");
+      const carbonOut = document.getElementById("carbonOut");
+      const temperatureOut = document.getElementById("temperatureOut");
+      const phaseName = document.getElementById("phaseName");
+      const phaseDescription =
+        document.getElementById("phaseDescription");
+      const metricC = document.getElementById("metricC");
+      const metricT = document.getElementById("metricT");
+      const leverCard = document.getElementById("leverCard");
+      const hint = document.getElementById("hint");
+      const tieLimits = document.getElementById("tieLimits");
+      const leftBar = document.getElementById("leftBar");
+      const rightBar = document.getElementById("rightBar");
+      const leftLabel = document.getElementById("leftLabel");
+      const rightLabel = document.getElementById("rightLabel");
+      const leftValue = document.getElementById("leftValue");
+      const rightValue = document.getElementById("rightValue");
+      const formulaText = document.getElementById("formulaText");
 
-    canvas.width = logicalWidth * dpr;
-    canvas.height = logicalHeight * dpr;
+      const NS = "http://www.w3.org/2000/svg";
 
-    // Diagrammgrenzen & Ränder (auf logischer Ebene)
-    const margin = { top: 40, right: 40, bottom: 60, left: 65 };
-    const width = logicalWidth - margin.left - margin.right;
-    const height = logicalHeight - margin.top - margin.bottom;
+      const frame = {
+        left: 84,
+        right: 1066,
+        top: 30,
+        bottom: 624
+      };
 
-    // Wertebereich
-    const minC = 0, maxC = 6.67;
-    const minT = 0, maxT = 1600;
+      const yMin = 500;
+      const yMax = 1600;
 
-    // Zustand
-    let isFrozen = false;
-    let currentC = 0.8;
-    let currentT = 900;
+      let xMax = 6.67;
+      let view = "full";
+      let dynamicLayer;
 
-    // Punkte Metastabil (Fe-Fe3C)
-    const P = {
-      A: { c: 0, t: 1536 },
-      B: { c: 0.53, t: 1493 },
-      C: { c: 4.30, t: 1147 },
-      D: { c: 6.67, t: 1320 },
-      E: { c: 2.06, t: 1147 },
-      F: { c: 6.67, t: 1147 },
-      G: { c: 0, t: 911 },
-      H: { c: 0.09, t: 1493 },
-      J: { c: 0.17, t: 1493 },
-      K: { c: 6.67, t: 723 },
-      N: { c: 0, t: 1392 },
-      P: { c: 0.02, t: 723 },
-      Q: { c: 0.00, t: 20 },
-      S: { c: 0.80, t: 723 },
-      M: { c: 0, t: 769 },
-      O: { c: 0.45, t: 769 }
-    };
+      const fmt = (value, digits = 2) =>
+        value.toLocaleString("de-DE", {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        });
 
-    // Punkte Stabil (Fe-C Graphit)
-    const Ps = {
-      C_prime: { c: 4.25, t: 1153 },
-      E_prime: { c: 2.08, t: 1153 },
-      F_prime: { c: 6.67, t: 1153 },
-      S_prime: { c: 0.68, t: 738 },
-      K_prime: { c: 6.67, t: 738 }
-    };
+      const X = c =>
+        frame.left +
+        (c / xMax) * (frame.right - frame.left);
 
-    // Linear-Interpolation für Kurven
-    function interp(x, x0, y0, x1, y1) {
-      if (x1 === x0) return y0;
-      return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
-    }
+      const Y = t =>
+        frame.bottom -
+        ((t - yMin) / (yMax - yMin)) *
+        (frame.bottom - frame.top);
 
-    // Umrechnung Koordinaten <-> Daten
-    function cToX(c) {
-      return margin.left + ((c - minC) / (maxC - minC)) * width;
-    }
-    function tToY(t) {
-      return margin.top + height - ((t - minT) / (maxT - minT)) * height;
-    }
-    function xToC(x) {
-      let c = minC + ((x - margin.left) / width) * (maxC - minC);
-      return Math.max(minC, Math.min(maxC, c));
-    }
-    function yToT(y) {
-      let t = maxT - ((y - margin.top) / height) * (maxT - minT);
-      return Math.max(minT, Math.min(maxT, t));
-    }
+      const node = (tag, attrs = {}, text = "") => {
+        const element = document.createElementNS(NS, tag);
 
-    function drawDiagram() {
-      ctx.save();
-      ctx.scale(dpr, dpr);
-      ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+        Object.entries(attrs).forEach(([key, value]) =>
+          element.setAttribute(key, value)
+        );
 
-      // Achsen & Gitter
-      ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 1;
-      
-      // Horizontal-Linien (Temperatur)
-      for (let t = 200; t <= 1600; t += 200) {
-        let y = tToY(t);
-        ctx.beginPath();
-        ctx.moveTo(margin.left, y);
-        ctx.lineTo(margin.left + width, y);
-        ctx.stroke();
+        if (text) {
+          element.textContent = text;
+        }
 
-        ctx.fillStyle = '#64748b';
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(t + ' °C', margin.left - 8, y + 4);
-      }
+        return element;
+      };
 
-      // Vertikal-Linien (C-Gehalt)
-      for (let c = 1; c <= 6; c++) {
-        let x = cToX(c);
-        ctx.beginPath();
-        ctx.moveTo(x, margin.top);
-        ctx.lineTo(x, margin.top + height);
-        ctx.stroke();
+      const add = (parent, tag, attrs, text) => {
+        const element = node(tag, attrs, text);
+        parent.appendChild(element);
+        return element;
+      };
 
-        ctx.fillStyle = '#64748b';
-        ctx.textAlign = 'center';
-        ctx.fillText(c + ' %', x, margin.top + height + 18);
-      }
+      const polygonPoints = points =>
+        points
+          .map(([c, t]) => `${X(c)},${Y(t)}`)
+          .join(" ");
 
-      // Hilfslinien gestrichelt für key C-Werte
-      const keyC = [
-        { c: 0.02, label: '0.02%' },
-        { c: 0.8, label: '0.8%' },
-        { c: 2.06, label: '2.06%' },
-        { c: 4.3, label: '4.3%' },
-        { c: 6.67, label: '6.67%' }
+      const boundaries = {
+        liquidLeft: [
+          [0, 1538],
+          [.53, 1493],
+          [1.2, 1390],
+          [2.2, 1305],
+          [3.2, 1220],
+          [4.3, 1147]
+        ],
+
+        liquidRight: [
+          [4.3, 1147],
+          [5.25, 1177],
+          [6.67, 1227]
+        ],
+
+        gammaSolidus: [
+          [.17, 1493],
+          [.35, 1460],
+          [.7, 1430],
+          [1.2, 1350],
+          [1.7, 1250],
+          [2.14, 1147]
+        ],
+
+        a3: [
+          [0, 912],
+          [.1, 880],
+          [.2, 840],
+          [.4, 790],
+          [.6, 750],
+          [.76, 727]
+        ],
+
+        acm: [
+          [.76, 727],
+          [1, 800],
+          [1.35, 900],
+          [1.75, 1010],
+          [2.14, 1147]
+        ],
+
+        alphaSolvus: [
+          [.006, 500],
+          [.012, 600],
+          [.022, 727],
+          [.015, 780],
+          [.008, 850],
+          [0, 912]
+        ],
+
+        deltaLiquid: [
+          [0, 1538],
+          [.09, 1493]
+        ],
+
+        deltaGammaLeft: [
+          [0, 1394],
+          [.09, 1493]
+        ],
+
+        deltaGammaRight: [
+          [0, 1394],
+          [.17, 1493]
+        ]
+      };
+
+      const regions = [
+        {
+          key: "liquid",
+          name: "L",
+          description: "Einphasige Schmelze.",
+          color: "var(--liquid)",
+          points: [
+            [0, 1600],
+            [6.67, 1600],
+            [6.67, 1227],
+            [4.3, 1147],
+            [3.2, 1220],
+            [2.2, 1305],
+            [1.2, 1390],
+            [.53, 1493],
+            [0, 1538]
+          ]
+        },
+        {
+          key: "liquidCementite",
+          name: "L + Fe₃C",
+          description:
+            "Schmelze und Zementit liegen gleichzeitig vor.",
+          color: "var(--liquid-cementite)",
+          points: [
+            [4.3, 1147],
+            [6.67, 1227],
+            [6.67, 1147]
+          ]
+        },
+        {
+          key: "deltaLiquid",
+          name: "δ + L",
+          description:
+            "Delta-Ferrit und Schmelze liegen gleichzeitig vor.",
+          color: "var(--delta)",
+          points: [
+            [0, 1538],
+            [.53, 1493],
+            [.09, 1493]
+          ]
+        },
+        {
+          key: "delta",
+          name: "δ",
+          description:
+            "Einphasiger Delta-Ferrit mit kubisch-raumzentriertem Gitter.",
+          color: "var(--delta)",
+          points: [
+            [0, 1538],
+            [.09, 1493],
+            [0, 1394]
+          ]
+        },
+        {
+          key: "deltaGamma",
+          name: "δ + γ",
+          description:
+            "Delta-Ferrit und Austenit liegen gleichzeitig vor.",
+          color: "var(--alpha-gamma)",
+          points: [
+            [0, 1394],
+            [.09, 1493],
+            [.17, 1493]
+          ]
+        },
+        {
+          key: "gammaLiquid",
+          name: "γ + L",
+          description:
+            "Austenit und Schmelze liegen gleichzeitig vor.",
+          color: "var(--gamma-liquid)",
+          points: [
+            [.17, 1493],
+            [.53, 1493],
+            [1.2, 1390],
+            [2.2, 1305],
+            [3.2, 1220],
+            [4.3, 1147],
+            [2.14, 1147],
+            [1.7, 1250],
+            [1.2, 1350],
+            [.7, 1430],
+            [.35, 1460]
+          ]
+        },
+        {
+          key: "gamma",
+          name: "γ",
+          description:
+            "Einphasiger Austenit mit kubisch-flächenzentriertem Gitter.",
+          color: "var(--gamma)",
+          points: [
+            [0, 912],
+            [0, 1394],
+            [.17, 1493],
+            [.35, 1460],
+            [.7, 1430],
+            [1.2, 1350],
+            [1.7, 1250],
+            [2.14, 1147],
+            [1.75, 1010],
+            [1.35, 900],
+            [1, 800],
+            [.76, 727],
+            [.6, 750],
+            [.4, 790],
+            [.2, 840],
+            [.1, 880]
+          ]
+        },
+        {
+          key: "alphaGamma",
+          name: "α + γ",
+          description:
+            "Zweiphasengebiet aus Ferrit und Austenit.",
+          color: "var(--alpha-gamma)",
+          points: [
+            [0, 912],
+            [.1, 880],
+            [.2, 840],
+            [.4, 790],
+            [.6, 750],
+            [.76, 727],
+            [.022, 727],
+            [.015, 780],
+            [.008, 850]
+          ]
+        },
+        {
+          key: "gammaCementite",
+          name: "γ + Fe₃C",
+          description:
+            "Zweiphasengebiet aus Austenit und Zementit.",
+          color: "var(--gamma-cementite)",
+          points: [
+            [.76, 727],
+            [1, 800],
+            [1.35, 900],
+            [1.75, 1010],
+            [2.14, 1147],
+            [6.67, 1147],
+            [6.67, 727]
+          ]
+        },
+        {
+          key: "alpha",
+          name: "α",
+          description:
+            "Einphasiger Ferrit mit sehr geringer Kohlenstofflöslichkeit.",
+          color: "var(--alpha)",
+          points: [
+            [0, 500],
+            [.006, 500],
+            [.012, 600],
+            [.022, 727],
+            [.015, 780],
+            [.008, 850],
+            [0, 912]
+          ]
+        },
+        {
+          key: "alphaCementite",
+          name: "α + Fe₃C",
+          description:
+            "Zweiphasengebiet aus Ferrit und Zementit.",
+          color: "var(--alpha-cementite)",
+          points: [
+            [.006, 500],
+            [6.67, 500],
+            [6.67, 727],
+            [.022, 727],
+            [.012, 600]
+          ]
+        }
       ];
 
-      ctx.strokeStyle = '#94a3b8';
-      ctx.setLineDash([2, 4]);
-      keyC.forEach(item => {
-        let x = cToX(item.c);
-        ctx.beginPath();
-        ctx.moveTo(x, margin.top);
-        ctx.lineTo(x, margin.top + height);
-        ctx.stroke();
+      const linePath = points =>
+        points
+          .map(
+            ([c, t], index) =>
+              `${index ? "L" : "M"}${X(c)} ${Y(t)}`
+          )
+          .join(" ");
 
-        ctx.fillStyle = '#475569';
-        ctx.font = '10px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(item.label, x, margin.top + height + 32);
-      });
-      ctx.setLineDash([]);
+      const pointInPolygon = (point, polygon) => {
+        const [x, y] = point;
+        let inside = false;
 
-      // Magnetische Umwandlung A2 (769 °C) Linie MO
-      ctx.strokeStyle = '#94a3b8';
-      ctx.setLineDash([3, 3]);
-      ctx.beginPath();
-      ctx.moveTo(cToX(0), tToY(769));
-      ctx.lineTo(cToX(0.45), tToY(769));
-      ctx.stroke();
-      ctx.setLineDash([]);
+        for (
+          let i = 0, j = polygon.length - 1;
+          i < polygon.length;
+          j = i++
+        ) {
+          const [xi, yi] = polygon[i];
+          const [xj, yj] = polygon[j];
 
-      // 1. Metastabiles System (Schwarz)
-      ctx.strokeStyle = '#0f172a';
-      ctx.lineWidth = 1.8;
+          const intersects =
+            ((yi > y) !== (yj > y)) &&
+            (
+              x <
+              (xj - xi) * (y - yi) /
+              ((yj - yi) || Number.EPSILON) +
+              xi
+            );
 
-      const metaLines = [
-        // Peritektischer Bereich
-        [P.A, P.H], [P.A, P.B], [P.H, P.J], [P.B, P.J], [P.H, {c:0, t:1493}], [P.N, P.J],
-        // Liquidus / Solidus
-        [P.B, P.C], [P.C, P.D], [P.J, P.E], [P.E, P.C], [P.C, P.F],
-        // Austenit Entmischung (A3 / Acm / A1)
-        [P.N, P.G], [P.G, P.P], [P.G, P.S], [P.E, P.S], [P.P, {c:0, t:723}], [{c:0, t:723}, P.K],
-        // Ferrit Löslichkeit / Zementit
-        [P.P, P.Q], [P.D, P.K], [P.K, {c:6.67, t:0}]
-      ];
-
-      metaLines.forEach(([start, end]) => {
-        ctx.beginPath();
-        ctx.moveTo(cToX(start.c), tToY(start.t));
-        ctx.lineTo(cToX(end.c), tToY(end.t));
-        ctx.stroke();
-      });
-
-      // 2. Stabiles System (Rot gestrichelt)
-      ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([5, 4]);
-
-      ctx.beginPath();
-      ctx.moveTo(cToX(Ps.E_prime.c), tToY(Ps.E_prime.t));
-      ctx.lineTo(cToX(Ps.F_prime.c), tToY(Ps.F_prime.t));
-      ctx.moveTo(cToX(0), tToY(Ps.S_prime.t));
-      ctx.lineTo(cToX(Ps.K_prime.c), tToY(Ps.K_prime.t));
-      ctx.moveTo(cToX(P.G.c), tToY(P.G.t));
-      ctx.lineTo(cToX(Ps.S_prime.c), tToY(Ps.S_prime.t));
-      ctx.moveTo(cToX(Ps.E_prime.c), tToY(Ps.E_prime.t));
-      ctx.lineTo(cToX(Ps.S_prime.c), tToY(Ps.S_prime.t));
-      ctx.moveTo(cToX(Ps.C_prime.c), tToY(Ps.C_prime.t));
-      ctx.lineTo(cToX(5.5), tToY(1600));
-      ctx.stroke();
-
-      ctx.setLineDash([]);
-
-      // Punktbeschriftungen im Diagramm
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 11px sans-serif';
-      
-      const labels = [
-        { text: 'A 1536°C', p: P.A, dx: 8, dy: -2 },
-        { text: 'N 1392°C', p: P.N, dx: 8, dy: 10 },
-        { text: 'G 911°C', p: P.G, dx: 8, dy: -2 },
-        { text: 'P 723°C', p: P.P, dx: -42, dy: 12 },
-        { text: 'S 723°C', p: P.S, dx: -5, dy: 15 },
-        { text: 'E 1147°C', p: P.E, dx: 5, dy: 12 },
-        { text: 'C 1147°C', p: P.C, dx: -10, dy: 15 },
-        { text: 'D 1320°C', p: P.D, dx: -55, dy: -5 },
-        { text: 'F', p: P.F, dx: 5, dy: 12 },
-        { text: 'K', p: P.K, dx: 5, dy: 12 },
-        { text: 'E\' 1153°C', p: Ps.E_prime, dx: -15, dy: -8, color: '#dc2626' },
-        { text: 'C\'', p: Ps.C_prime, dx: -5, dy: -8, color: '#dc2626' },
-        { text: 'S\' 738°C', p: Ps.S_prime, dx: -15, dy: -8, color: '#dc2626' }
-      ];
-
-      labels.forEach(lbl => {
-        ctx.fillStyle = lbl.color || '#0f172a';
-        ctx.fillText(lbl.text, cToX(lbl.p.c) + lbl.dx, tToY(lbl.p.t) + lbl.dy);
-      });
-
-      // Regions-Beschriftungen
-      ctx.fillStyle = '#334155';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.textAlign = 'center';
-
-      ctx.fillText('Schmelze (S)', cToX(3.2), tToY(1450));
-      ctx.fillText('Austenit (γ)', cToX(0.8), tToY(1000));
-      ctx.fillText('Schmelze (S) + Austenit (γ)', cToX(2.3), tToY(1280));
-      ctx.fillText('Schmelze + Fe₃Cₚᵣᵢₘäᵣ', cToX(5.3), tToY(1280));
-
-      ctx.font = '11px sans-serif';
-      ctx.fillText('Austenit (γ) + Fe₃Cₛₑₖᵤₙdäᵣ', cToX(1.4), tToY(880));
-      ctx.fillText('Austenit (γ) + Ledeburit I + Fe₃Cₛₑₖᵤₙdäᵣ', cToX(3.1), tToY(950));
-      ctx.fillText('Ledeburit I + Fe₃Cₚᵣᵢₘäᵣ', cToX(5.3), tToY(950));
-
-      ctx.fillText('α-Ferrit + Perlit', cToX(0.4), tToY(500));
-      ctx.fillText('Perlit + Fe₃Cₛₑₖᵤₙdäᵣ', cToX(1.4), tToY(500));
-      ctx.fillText('Perlit + Ledeburit II + Fe₃Cₛₑₖᵤₙdäᵣ', cToX(3.1), tToY(500));
-      ctx.fillText('Ledeburit II + Fe₃Cₚᵣᵢₘäᵣ', cToX(5.3), tToY(500));
-
-      // Stahl / Gusseisen Kennzeichnung unten
-      let x0 = cToX(0), x2 = cToX(2.06), x6 = cToX(6.67);
-      let yBottom = margin.top + height + 48;
-
-      ctx.fillStyle = '#475569';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.fillText('Stahl', (x0 + x2) / 2, yBottom);
-      ctx.fillText('Gusseisen', (x2 + x6) / 2, yBottom);
-
-      // Achsenbeschriftung
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('Kohlenstoffgehalt [Gew.-% C]', margin.left + width / 2, margin.top + height + 48);
-
-      ctx.save();
-      ctx.translate(18, margin.top + height / 2);
-      ctx.rotate(-Math.PI / 2);
-      ctx.fillText('Temperatur [°C]', 0, 0);
-      ctx.restore();
-
-      // Fadenkreuz & Aktueller Punkt
-      const px = cToX(currentC);
-      const py = tToY(currentT);
-
-      ctx.strokeStyle = isFrozen ? '#d97706' : '#2563eb';
-      ctx.lineWidth = 1.2;
-      ctx.setLineDash([4, 4]);
-
-      ctx.beginPath();
-      ctx.moveTo(px, margin.top);
-      ctx.lineTo(px, margin.top + height);
-      ctx.moveTo(margin.left, py);
-      ctx.lineTo(margin.left + width, py);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Punkt markieren
-      ctx.fillStyle = isFrozen ? '#d97706' : '#2563eb';
-      ctx.beginPath();
-      ctx.arc(px, py, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    // Exakte Bestimmung der Phasen und Zweiphasengebiete
-    function getAnalysis(c, t) {
-      let group = "";
-      let phase = "";
-
-      // Werkstoffgruppe
-      if (c <= 2.06) {
-        if (c < 0.8) group = "Untereutektoider Stahl";
-        else if (c === 0.8) group = "Eutektoider Stahl";
-        else group = "Übereutektoider Stahl";
-      } else {
-        if (c < 4.3) group = "Untereutektoides Gusseisen";
-        else if (c === 4.3) group = "Eutektoides Gusseisen";
-        else group = "Übereutektoides Gusseisen";
-      }
-
-      // Phasengrenzen (Temperatur-Schwellen in Abhängigkeit von c)
-      const tLiquidus = (c <= 0.53) ? interp(c, 0, P.A.t, 0.53, P.B.t) :
-                        (c <= 4.30) ? interp(c, 0.53, P.B.t, 4.30, P.C.t) :
-                        interp(c, 4.30, P.C.t, 6.67, P.D.t);
-
-      const tSolidus = (c <= 0.09) ? interp(c, 0, P.A.t, 0.09, P.H.t) :
-                       (c <= 0.17) ? 1493 :
-                       (c <= 2.06) ? interp(c, 0.17, P.J.t, 2.06, P.E.t) :
-                       1147;
-
-      const tAr3 = (c <= 0.8) ? interp(c, 0, P.G.t, 0.8, P.S.t) : 0;
-      const tAcm = (c > 0.8 && c <= 2.06) ? interp(c, 0.8, P.S.t, 2.06, P.E.t) : 0;
-      const tAr1 = (c <= 0.02) ? interp(c, 0, P.G.t, 0.02, P.P.t) : 723;
-      const tSolvusPQ = (c <= 0.02) ? interp(c, 0, P.Q.t, 0.02, P.P.t) : 0;
-
-      // Logik zur Phasenbestimmung
-      if (t >= tLiquidus) {
-        phase = "Homogene Schmelze (S)";
-      } 
-      // Schmelze + Festphase (Zweiphasengebiete oben)
-      else if (t < tLiquidus && t >= tSolidus) {
-        if (c < 0.09 && t >= 1493) {
-          phase = "δ-Ferrit + Schmelze (S)";
-        } else if (c >= 0.09 && c <= 0.17 && t >= 1493) {
-          phase = "Peritektikum: δ-Ferrit + Schmelze (S)";
-        } else if (c > 4.30) {
-          phase = "Schmelze (S) + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
-        } else {
-          phase = "Schmelze (S) + Austenit (γ)";
+          if (intersects) {
+            inside = !inside;
+          }
         }
-      } 
-      // Homogener Austenit
-      else if (t < tSolidus && t >= 1147 && c <= 2.06) {
-        if (c < 0.09 && t > 1392) phase = "δ-Ferrit";
-        else if (c < 0.17 && t > 1493) phase = "δ-Ferrit + Austenit (γ)";
-        else phase = "Homogener Austenit (γ)";
-      }
-      // Erstarrte Gusseisenbereiche oberhalb 723°C
-      else if (t >= 1147 && c > 2.06) {
-        phase = "Schmelze (S) + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
-      }
-      // Mittlerer Temperaturbereich (723°C bis 1147°C)
-      else if (t >= 723 && t < 1147) {
-        if (c <= 0.02) {
-          if (t >= tAr1) phase = "Austenit (γ) + α-Ferrit";
-          else phase = "α-Ferrit";
-        } else if (c < 0.8) {
-          if (t >= tAr3) phase = "Homogener Austenit (γ)";
-          else phase = "Zweiphasengebiet: Austenit (γ) + α-Ferrit";
-        } else if (c <= 2.06) {
-          if (t >= tAcm) phase = "Homogener Austenit (γ)";
-          else phase = "Zweiphasengebiet: Austenit (γ) + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
-        } else if (c <= 4.3) {
-          phase = "Austenit (γ) + Ledeburit I + Fe₃Cₛₑₖᵤₙdäᵣ";
-        } else {
-          phase = "Ledeburit I + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
+
+        return inside;
+      };
+
+      const interpolateXatT = (points, t) => {
+        const sorted = [...points].sort(
+          (a, b) => a[1] - b[1]
+        );
+
+        for (let i = 0; i < sorted.length - 1; i++) {
+          const [x1, t1] = sorted[i];
+          const [x2, t2] = sorted[i + 1];
+
+          if (t >= t1 && t <= t2) {
+            const ratio = (t - t1) / (t2 - t1 || 1);
+            return x1 + ratio * (x2 - x1);
+          }
         }
-      } 
-      // Unterhalb A1 (723 °C) - Raumtemperaturbereich
-      else {
-        if (c <= 0.02) {
-          if (t < tSolvusPQ) phase = "α-Ferrit + Tertiärzementit (Fe₃Cₜₑᵣₜᵢäᵣ)";
-          else phase = "Homogener α-Ferrit";
-        } else if (c < 0.8) {
-          phase = "α-Ferrit + Perlit + Fe₃Cₜₑᵣₜᵢäᵣ";
-        } else if (Math.abs(c - 0.8) < 0.02) {
-          phase = "100% Perlit (Eutektoid)";
-        } else if (c <= 2.06) {
-          phase = "Perlit + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
-        } else if (c < 4.3) {
-          phase = "Perlit + Ledeburit II + Sekundärzementit (Fe₃Cₛₑₖᵤₙdäᵣ)";
-        } else if (Math.abs(c - 4.3) < 0.05) {
-          phase = "Ledeburit II (Eutektikum)";
+
+        return t < sorted[0][1]
+          ? sorted[0][0]
+          : sorted.at(-1)[0];
+      };
+
+      function specialPoint(c, t) {
+        if (
+          Math.abs(c - .76) < .015 &&
+          Math.abs(t - 727) < 3
+        ) {
+          return {
+            name: "Eutektoider Punkt",
+            description:
+              "Invariante Reaktion: γ-Austenit ⇌ α-Ferrit + Fe₃C (Perlitbildung)."
+          };
+        }
+
+        if (
+          Math.abs(c - 4.30) < .025 &&
+          Math.abs(t - 1147) < 3
+        ) {
+          return {
+            name: "Eutektischer Punkt",
+            description:
+              "Invariante Reaktion: Schmelze ⇌ γ-Austenit + Fe₃C (Ledeburitbildung)."
+          };
+        }
+
+        if (
+          Math.abs(c - .17) < .015 &&
+          Math.abs(t - 1493) < 3
+        ) {
+          return {
+            name: "Peritektischer Punkt",
+            description:
+              "Invariante Reaktion: Schmelze + δ-Ferrit ⇌ γ-Austenit."
+          };
+        }
+
+        return null;
+      }
+
+      function regionAt(c, t) {
+        const special = specialPoint(c, t);
+
+        if (special) {
+          return {
+            key: "special",
+            ...special
+          };
+        }
+
+        const order = [
+          "deltaLiquid",
+          "deltaGamma",
+          "gammaLiquid",
+          "liquidCementite",
+          "alphaGamma",
+          "gammaCementite",
+          "alphaCementite",
+          "liquid",
+          "gamma",
+          "delta",
+          "alpha"
+        ];
+
+        for (const key of order) {
+          const region = regions.find(
+            item => item.key === key
+          );
+
+          if (pointInPolygon([c, t], region.points)) {
+            return region;
+          }
+        }
+
+        return {
+          key: "boundary",
+          name: "Phasengrenze",
+          description:
+            "Der gewählte Punkt liegt auf oder sehr nahe an einer idealisierten Phasengrenze."
+        };
+      }
+
+      function leverFor(key, t) {
+        const definitions = {
+          alphaGamma: {
+            left: interpolateXatT(
+              boundaries.alphaSolvus,
+              t
+            ),
+            right: interpolateXatT(
+              boundaries.a3,
+              t
+            ),
+            leftLabel: "α-Ferrit",
+            rightLabel: "γ-Austenit",
+            leftSymbol: "α",
+            rightSymbol: "γ"
+          },
+
+          gammaCementite: {
+            left: interpolateXatT(
+              boundaries.acm,
+              t
+            ),
+            right: 6.67,
+            leftLabel: "γ-Austenit",
+            rightLabel: "Fe₃C",
+            leftSymbol: "γ",
+            rightSymbol: "Fe₃C"
+          },
+
+          alphaCementite: {
+            left: interpolateXatT(
+              boundaries.alphaSolvus,
+              t
+            ),
+            right: 6.67,
+            leftLabel: "α-Ferrit",
+            rightLabel: "Fe₃C",
+            leftSymbol: "α",
+            rightSymbol: "Fe₃C"
+          },
+
+          gammaLiquid: {
+            left: interpolateXatT(
+              boundaries.gammaSolidus,
+              t
+            ),
+            right: interpolateXatT(
+              boundaries.liquidLeft,
+              t
+            ),
+            leftLabel: "γ-Austenit",
+            rightLabel: "Schmelze",
+            leftSymbol: "γ",
+            rightSymbol: "L"
+          },
+
+          liquidCementite: {
+            left: interpolateXatT(
+              boundaries.liquidRight,
+              t
+            ),
+            right: 6.67,
+            leftLabel: "Schmelze",
+            rightLabel: "Fe₃C",
+            leftSymbol: "L",
+            rightSymbol: "Fe₃C"
+          },
+
+          deltaLiquid: {
+            left: interpolateXatT(
+              boundaries.deltaLiquid,
+              t
+            ),
+            right: interpolateXatT(
+              [
+                [0, 1538],
+                [.53, 1493]
+              ],
+              t
+            ),
+            leftLabel: "δ-Ferrit",
+            rightLabel: "Schmelze",
+            leftSymbol: "δ",
+            rightSymbol: "L"
+          },
+
+          deltaGamma: {
+            left: interpolateXatT(
+              boundaries.deltaGammaLeft,
+              t
+            ),
+            right: interpolateXatT(
+              boundaries.deltaGammaRight,
+              t
+            ),
+            leftLabel: "δ-Ferrit",
+            rightLabel: "γ-Austenit",
+            leftSymbol: "δ",
+            rightSymbol: "γ"
+          }
+        };
+
+        return definitions[key] || null;
+      }
+
+      function drawChart() {
+        svg.replaceChildren(
+          node(
+            "title",
+            { id: "chartTitle" },
+            "Eisen-Kohlenstoff-Phasendiagramm"
+          ),
+          node(
+            "desc",
+            { id: "chartDesc" },
+            "Temperatur über Kohlenstoffgehalt mit Phasenfeldern und einer interaktiv gewählten Legierung."
+          )
+        );
+
+        const defs = add(svg, "defs");
+
+        const clip = add(
+          defs,
+          "clipPath",
+          { id: "plotClip" }
+        );
+
+        add(clip, "rect", {
+          x: frame.left,
+          y: frame.top,
+          width: frame.right - frame.left,
+          height: frame.bottom - frame.top
+        });
+
+        const grid = add(svg, "g");
+
+        const yTicks = [
+          500,
+          600,
+          700,
+          727,
+          800,
+          900,
+          1000,
+          1100,
+          1147,
+          1200,
+          1300,
+          1400,
+          1493,
+          1600
+        ];
+
+        const xTicks = view === "steel"
+          ? [0, .2, .4, .6, .76, 1, 1.5, 2, 2.14]
+          : [0, 1, 2, 3, 4, 4.3, 5, 6, 6.67];
+
+        yTicks.forEach(t => {
+          add(grid, "line", {
+            x1: frame.left,
+            x2: frame.right,
+            y1: Y(t),
+            y2: Y(t),
+            class: "svg-grid"
+          });
+
+          add(
+            grid,
+            "text",
+            {
+              x: frame.left - 12,
+              y: Y(t) + 4,
+              "text-anchor": "end",
+              class: "svg-axis"
+            },
+            String(t)
+          );
+        });
+
+        xTicks.forEach(c => {
+          add(grid, "line", {
+            x1: X(c),
+            x2: X(c),
+            y1: frame.top,
+            y2: frame.bottom,
+            class: "svg-grid"
+          });
+
+          add(
+            grid,
+            "text",
+            {
+              x: X(c),
+              y: frame.bottom + 23,
+              "text-anchor": "middle",
+              class: "svg-axis"
+            },
+            fmt(c, c % 1 ? 2 : 0)
+          );
+        });
+
+        add(svg, "rect", {
+          x: frame.left,
+          y: frame.top,
+          width: frame.right - frame.left,
+          height: frame.bottom - frame.top,
+          fill: "none",
+          stroke: "var(--line)",
+          "stroke-width": "1.5"
+        });
+
+        add(
+          svg,
+          "text",
+          {
+            x: (frame.left + frame.right) / 2,
+            y: 682,
+            "text-anchor": "middle",
+            class: "svg-axis-title"
+          },
+          "Kohlenstoffgehalt C [Massen-%]"
+        );
+
+        const yTitle = add(
+          svg,
+          "text",
+          {
+            x: 23,
+            y: (frame.top + frame.bottom) / 2,
+            "text-anchor": "middle",
+            class: "svg-axis-title",
+            transform:
+              `rotate(-90 23 ${(frame.top + frame.bottom) / 2})`
+          },
+          "Temperatur [°C]"
+        );
+
+        yTitle.setAttribute("aria-hidden", "true");
+
+        const plot = add(
+          svg,
+          "g",
+          { "clip-path": "url(#plotClip)" }
+        );
+
+        regions.forEach(region => {
+          add(plot, "polygon", {
+            points: polygonPoints(region.points),
+            fill: region.color,
+            opacity: region.key === "delta"
+              ? .82
+              : .72
+          });
+        });
+
+        [
+          boundaries.liquidLeft,
+          boundaries.liquidRight,
+          boundaries.gammaSolidus,
+          boundaries.a3,
+          boundaries.acm,
+          boundaries.alphaSolvus,
+          boundaries.deltaLiquid,
+          boundaries.deltaGammaLeft,
+          boundaries.deltaGammaRight
+        ].forEach(points => {
+          add(plot, "path", {
+            d: linePath(points),
+            class: "svg-boundary"
+          });
+        });
+
+        add(plot, "line", {
+          x1: X(0),
+          x2: X(6.67),
+          y1: Y(727),
+          y2: Y(727),
+          class: "svg-reaction"
+        });
+
+        add(plot, "line", {
+          x1: X(2.14),
+          x2: X(6.67),
+          y1: Y(1147),
+          y2: Y(1147),
+          class: "svg-reaction"
+        });
+
+        add(plot, "line", {
+          x1: X(.09),
+          x2: X(.53),
+          y1: Y(1493),
+          y2: Y(1493),
+          class: "svg-reaction"
+        });
+
+        add(plot, "line", {
+          x1: X(6.67),
+          x2: X(6.67),
+          y1: Y(500),
+          y2: Y(1227),
+          class: "svg-boundary"
+        });
+
+        const labels = view === "steel"
+          ? [
+              [1.45, 1550, "L", ""],
+              [.12, 1450, "δ", "svg-field-small"],
+              [.42, 1405, "γ + L", ""],
+              [.7, 1090, "γ", ""],
+              [.18, 780, "α + γ", "svg-field-small"],
+              [1.32, 880, "γ + Fe₃C", "svg-field-small"],
+              [.72, 620, "α + Fe₃C", "svg-field-small"]
+            ]
+          : [
+              [3.45, 1490, "L", ""],
+              [.12, 1442, "δ", "svg-field-small"],
+              [1.72, 1350, "γ + L", ""],
+              [.85, 1080, "γ", ""],
+              [.24, 780, "α + γ", "svg-field-small"],
+              [3.08, 930, "γ + Fe₃C", ""],
+              [3.1, 625, "α + Fe₃C", ""],
+              [5.63, 1170, "L + Fe₃C", "svg-field-small"]
+            ];
+
+        labels.forEach(
+          ([c, t, label, extra]) => {
+            add(
+              plot,
+              "text",
+              {
+                x: X(c),
+                y: Y(t),
+                "text-anchor": "middle",
+                class: `svg-field-label ${extra}`
+              },
+              label
+            );
+          }
+        );
+
+        const keyPoints = [
+          [.76, 727, "E · 0,76 / 727"],
+          [4.3, 1147, "C · 4,30 / 1147"],
+          [.17, 1493, "P · 0,17 / 1493"],
+          [2.14, 1147, "2,14"],
+          [0, 1538, "1538 °C"]
+        ];
+
+        keyPoints.forEach(([c, t, label]) => {
+          add(plot, "circle", {
+            cx: X(c),
+            cy: Y(t),
+            r: 5,
+            class: "svg-keypoint"
+          });
+
+          const anchor =
+            c > xMax * .8 ? "end" : "start";
+
+          add(
+            plot,
+            "text",
+            {
+              x:
+                X(c) +
+                (anchor === "end" ? -8 : 8),
+              y: Y(t) - 9,
+              "text-anchor": anchor,
+              class: "svg-key-label"
+            },
+            label
+          );
+        });
+
+        dynamicLayer = add(
+          plot,
+          "g",
+          { id: "dynamicLayer" }
+        );
+
+        const hit = add(svg, "rect", {
+          x: frame.left,
+          y: frame.top,
+          width: frame.right - frame.left,
+          height: frame.bottom - frame.top,
+          fill: "transparent",
+          cursor: "crosshair",
+          "aria-label":
+            "Punkt im Diagramm auswählen"
+        });
+
+        hit.addEventListener(
+          "pointerdown",
+          selectFromPointer
+        );
+
+        update(false);
+      }
+
+      function selectFromPointer(event) {
+        const rect =
+          svg.getBoundingClientRect();
+
+        const scaleX = 1100 / rect.width;
+        const scaleY = 700 / rect.height;
+
+        const px =
+          (event.clientX - rect.left) * scaleX;
+
+        const py =
+          (event.clientY - rect.top) * scaleY;
+
+        const c = Math.max(
+          0,
+          Math.min(
+            xMax,
+            (
+              (px - frame.left) /
+              (frame.right - frame.left)
+            ) * xMax
+          )
+        );
+
+        const t = Math.max(
+          yMin,
+          Math.min(
+            yMax,
+            yMax -
+            (
+              (py - frame.top) /
+              (frame.bottom - frame.top)
+            ) *
+            (yMax - yMin)
+          )
+        );
+
+        carbon.value = c.toFixed(2);
+        temperature.value = Math.round(t);
+
+        update();
+      }
+
+      function update(redrawDynamic = true) {
+        const c = Number(carbon.value);
+        const t = Number(temperature.value);
+
+        const region = regionAt(c, t);
+        const lever = leverFor(region.key, t);
+
+        carbonOut.value =
+          `${fmt(c)} M.-% C`;
+
+        temperatureOut.value =
+          `${Math.round(t)} °C`;
+
+        metricC.textContent =
+          `${fmt(c)} % C`;
+
+        metricT.textContent =
+          `${Math.round(t)} °C`;
+
+        phaseName.textContent =
+          region.name;
+
+        phaseDescription.textContent =
+          region.description;
+
+        if (dynamicLayer && redrawDynamic) {
+          dynamicLayer.replaceChildren();
+        }
+
+        if (dynamicLayer) {
+          add(dynamicLayer, "line", {
+            x1: X(c),
+            x2: X(c),
+            y1: Y(yMin),
+            y2: Y(t),
+            class: "svg-crosshair"
+          });
+
+          add(dynamicLayer, "line", {
+            x1: X(0),
+            x2: X(c),
+            y1: Y(t),
+            y2: Y(t),
+            class: "svg-crosshair"
+          });
+        }
+
+        if (
+          lever &&
+          lever.right > lever.left &&
+          c >= lever.left - .02 &&
+          c <= lever.right + .02
+        ) {
+          const leftFraction = Math.max(
+            0,
+            Math.min(
+              1,
+              (lever.right - c) /
+              (lever.right - lever.left)
+            )
+          );
+
+          const rightFraction =
+            1 - leftFraction;
+
+          const leftPct =
+            Math.round(leftFraction * 100);
+
+          const rightPct =
+            100 - leftPct;
+
+          leverCard.hidden = false;
+
+          hint.textContent =
+            "Die rote gestrichelte Linie ist die Konode. Ihre Teilstrecken wirken wie die beiden Arme eines Hebels.";
+
+          tieLimits.textContent =
+            `Konodenenden: ${fmt(lever.left)} bis ${fmt(lever.right)} % C`;
+
+          leftLabel.textContent =
+            lever.leftLabel;
+
+          rightLabel.textContent =
+            lever.rightLabel;
+
+          leftValue.textContent =
+            `${leftPct} %`;
+
+          rightValue.textContent =
+            `${rightPct} %`;
+
+          leftBar.style.width =
+            `${leftPct}%`;
+
+          rightBar.style.width =
+            `${rightPct}%`;
+
+          formulaText.textContent =
+            `f${lever.leftSymbol} = ` +
+            `(C${lever.rightSymbol} − C₀) / ` +
+            `(C${lever.rightSymbol} − C${lever.leftSymbol})`;
+
+          if (dynamicLayer) {
+            add(dynamicLayer, "line", {
+              x1: X(lever.left),
+              x2: X(lever.right),
+              y1: Y(t),
+              y2: Y(t),
+              class: "svg-tie"
+            });
+
+            add(dynamicLayer, "circle", {
+              cx: X(lever.left),
+              cy: Y(t),
+              r: 6,
+              class: "svg-endpoint"
+            });
+
+            add(dynamicLayer, "circle", {
+              cx: X(lever.right),
+              cy: Y(t),
+              r: 6,
+              class: "svg-endpoint"
+            });
+          }
         } else {
-          phase = "Ledeburit II + Primärzementit (Fe₃Cₚᵣᵢₘäᵣ)";
+          leverCard.hidden = true;
+
+          hint.textContent =
+            region.key === "special"
+              ? "An einem invarianten Punkt koexistieren drei Phasen. Das gewöhnliche binäre Hebelgesetz ist dort nicht eindeutig anwendbar."
+              : "Das Hebelgesetz wird eingeblendet, sobald der gewählte Zustand in einem Zweiphasengebiet liegt.";
+        }
+
+        if (dynamicLayer) {
+          add(dynamicLayer, "circle", {
+            cx: X(c),
+            cy: Y(t),
+            r: 8,
+            class: "svg-selection"
+          });
         }
       }
 
-      return { group, phase };
-    }
+      [carbon, temperature].forEach(input => {
+        input.addEventListener(
+          "input",
+          () => update()
+        );
+      });
 
-    function updateUI() {
-      document.getElementById('val-c').innerText = currentC.toFixed(2) + ' Gew.-%';
-      document.getElementById('val-temp').innerText = Math.round(currentT) + ' °C';
+      document
+        .querySelectorAll("[data-view]")
+        .forEach(button => {
+          button.addEventListener("click", () => {
+            view = button.dataset.view;
 
-      const analysis = getAnalysis(currentC, currentT);
-      document.getElementById('val-group').innerText = analysis.group;
-      document.getElementById('val-phase').innerText = analysis.phase;
+            xMax =
+              view === "steel"
+                ? 2.14
+                : 6.67;
 
-      const statusEl = document.getElementById('status');
-      if (isFrozen) {
-        statusEl.innerText = '❄️ Punkt eingefroren (Klick zum Freigeben)';
-        statusEl.className = 'status-badge status-frozen';
-      } else {
-        statusEl.innerText = '● Live-Verfolgung (Klick zum Einfrieren)';
-        statusEl.className = 'status-badge status-active';
-      }
+            carbon.max = xMax;
 
-      drawDiagram();
-    }
+            if (
+              Number(carbon.value) > xMax
+            ) {
+              carbon.value = xMax;
+            }
 
-    // Event-Listener
-    canvas.addEventListener('mousemove', (e) => {
-      if (isFrozen) return;
+            document
+              .querySelectorAll("[data-view]")
+              .forEach(item => {
+                item.setAttribute(
+                  "aria-pressed",
+                  String(item === button)
+                );
+              });
 
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
+            drawChart();
+          });
+        });
 
-      currentC = xToC(mouseX);
-      currentT = yToT(mouseY);
+      document
+        .querySelectorAll(".presets button")
+        .forEach(button => {
+          button.addEventListener("click", () => {
+            const nextC =
+              Number(button.dataset.c);
 
-      updateUI();
-    });
+            if (nextC > xMax) {
+              view = "full";
+              xMax = 6.67;
+              carbon.max = xMax;
 
-    canvas.addEventListener('click', () => {
-      isFrozen = !isFrozen;
-      updateUI();
-    });
+              document
+                .querySelectorAll("[data-view]")
+                .forEach(item => {
+                  item.setAttribute(
+                    "aria-pressed",
+                    String(
+                      item.dataset.view === "full"
+                    )
+                  );
+                });
+            }
 
-    // Initiales Zeichnen
-    updateUI();
+            carbon.value = nextC;
+            temperature.value =
+              Number(button.dataset.t);
+
+            drawChart();
+          });
+        });
+
+      drawChart();
+    })();
   </script>
 </body>
 </html>
