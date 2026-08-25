@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Interaktives Eisen-Kohlenstoff-Phasendiagramm mit Hebelgesetz">
+  <meta name="description" content="Interaktives Eisen-Kohlenstoff-Phasendiagramm mit Hebelgesetz und schematischen Gefügebildern">
   <title>Eisen–Kohlenstoff-Phasendiagramm</title>
 
   <style>
@@ -260,6 +260,92 @@
       color: var(--muted);
       font-size: .9rem;
       line-height: 1.55;
+    }
+
+    .microstructure-card {
+      padding: 14px;
+      border: 1px solid rgba(38, 59, 50, .13);
+      border-radius: 16px;
+      background: rgba(255, 253, 248, .78);
+    }
+
+    .microstructure-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 11px;
+    }
+
+    .microstructure-header h3 {
+      margin: 2px 0 0;
+      font-size: 1rem;
+    }
+
+    .microstructure-label {
+      color: var(--muted);
+      font-size: .67rem;
+      font-weight: 850;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .microstructure-badge {
+      flex: 0 0 auto;
+      max-width: 48%;
+      overflow: hidden;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--ink);
+      font-size: .72rem;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .microstructure-frame {
+      overflow: hidden;
+      border: 1px solid rgba(38, 59, 50, .16);
+      border-radius: 12px;
+      background: #efe9df;
+      box-shadow: inset 0 1px 5px rgba(39, 48, 42, .08);
+    }
+
+    #microstructureCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+    }
+
+    .microstructure-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px 12px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: .7rem;
+    }
+
+    .microstructure-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .microstructure-legend i {
+      width: 9px;
+      height: 9px;
+      border: 1px solid rgba(23, 34, 28, .28);
+      border-radius: 50%;
+    }
+
+    .microstructure-caption {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: .72rem;
+      line-height: 1.45;
     }
 
     .selection-grid {
@@ -630,8 +716,9 @@
         <h1>Eisen–Kohlenstoff-<br>Phasendiagramm</h1>
         <p class="subtitle">
           Wähle Kohlenstoffgehalt und Temperatur. Das Diagramm zeigt
-          das Phasengebiet, eine Konode und – wo anwendbar – die
-          Phasenanteile nach dem Hebelgesetz.
+          das Phasengebiet, ein schematisches Gefügebild, eine
+          Konode und – wo anwendbar – die Phasenanteile nach dem
+          Hebelgesetz.
         </p>
       </div>
 
@@ -738,6 +825,40 @@
             </div>
           </div>
 
+          <section class="microstructure-card"
+            aria-labelledby="microstructureTitle">
+            <div class="microstructure-header">
+              <div>
+                <span class="microstructure-label">
+                  Schematisches Gefügebild
+                </span>
+                <h3 id="microstructureTitle">Mikrostruktur</h3>
+              </div>
+
+              <span class="microstructure-badge"
+                id="microstructureBadge">α + γ</span>
+            </div>
+
+            <div class="microstructure-frame">
+              <canvas
+                id="microstructureCanvas"
+                width="560"
+                height="315"
+                role="img"
+                aria-label="Schematische Mikrostruktur aus Ferrit und Austenit">
+                Schematische Mikrostruktur des gewählten Phasengebiets.
+              </canvas>
+            </div>
+
+            <div class="microstructure-legend"
+              id="microstructureLegend"></div>
+
+            <p class="microstructure-caption"
+              id="microstructureCaption">
+              Die Flächenanteile folgen dem Hebelgesetz.
+            </p>
+          </section>
+
           <div class="lever-card" id="leverCard">
             <h3>Hebelgesetz</h3>
 
@@ -828,7 +949,8 @@
       Fe–Fe₃C-Systems. Phasengrenzen sind interpoliert; für
       Berechnung, Normung oder Prozessauslegung sind verifizierte
       Fachdaten zu verwenden. Das Hebelgesetz liefert Phasenanteile,
-      nicht automatisch Gefügebestandteile.
+      nicht automatisch Gefügebestandteile. Die Gefügebilder sind
+      schematisch und dienen der qualitativen Einordnung.
     </p>
   </main>
 
@@ -856,6 +978,15 @@
       const leftValue = document.getElementById("leftValue");
       const rightValue = document.getElementById("rightValue");
       const formulaText = document.getElementById("formulaText");
+      const microCanvas =
+        document.getElementById("microstructureCanvas");
+      const microContext = microCanvas.getContext("2d");
+      const microstructureBadge =
+        document.getElementById("microstructureBadge");
+      const microstructureLegend =
+        document.getElementById("microstructureLegend");
+      const microstructureCaption =
+        document.getElementById("microstructureCaption");
 
       const NS = "http://www.w3.org/2000/svg";
 
@@ -907,6 +1038,475 @@
         parent.appendChild(element);
         return element;
       };
+
+      const phaseStyles = {
+        liquid: {
+          label: "Schmelze",
+          color: "#f4c56f",
+          line: "#a66a25"
+        },
+        delta: {
+          label: "δ-Ferrit",
+          color: "#9fc9dc",
+          line: "#4d8298"
+        },
+        gamma: {
+          label: "γ-Austenit",
+          color: "#e69473",
+          line: "#9d4f36"
+        },
+        alpha: {
+          label: "α-Ferrit",
+          color: "#8fc2a6",
+          line: "#3e7e61"
+        },
+        cementite: {
+          label: "Fe₃C",
+          color: "#655d70",
+          line: "#393340"
+        }
+      };
+
+      const microstructureText = {
+        liquid:
+          "Homogene Schmelze ohne feste Körner.",
+        delta:
+          "Schematische Körner aus einphasigem δ-Ferrit.",
+        gamma:
+          "Schematische Körner aus einphasigem γ-Austenit.",
+        alpha:
+          "Schematische Körner aus einphasigem α-Ferrit.",
+        deltaLiquid:
+          "δ-Kristallite wachsen in einer Schmelzematrix.",
+        gammaLiquid:
+          "γ-Kristallite wachsen in einer Schmelzematrix.",
+        liquidCementite:
+          "Primärzementit liegt neben verbleibender Schmelze vor.",
+        deltaGamma:
+          "δ-Ferrit und γ-Austenit bilden ein zweiphasiges Korngefüge.",
+        alphaGamma:
+          "α-Ferrit und γ-Austenit sind als getrennte Bereiche dargestellt.",
+        gammaCementite:
+          "γ-Austenit mit schematisch ausgeschiedenem Zementit.",
+        alphaCementite:
+          "α-Ferrit mit schematischen Zementitlamellen und -teilchen.",
+        eutectoid:
+          "Eutektoide Lamellen aus α-Ferrit und Fe₃C (Perlit).",
+        eutectic:
+          "Eutektisches Gemisch aus γ-Austenit und Fe₃C (Ledeburit).",
+        peritectic:
+          "γ-Austenit bildet sich an der Grenze zwischen δ-Ferrit und Schmelze.",
+        boundary:
+          "Auf der idealisierten Phasengrenze berühren sich benachbarte Zustände."
+      };
+
+      const grainRows = [
+        [0, .22, .47, .73, 1],
+        [0, .18, .51, .77, 1],
+        [0, .26, .44, .70, 1],
+        [0, .20, .49, .80, 1]
+      ];
+
+      const shade = (hex, amount) => {
+        const value = Number.parseInt(hex.slice(1), 16);
+        const channels = [
+          value >> 16,
+          (value >> 8) & 255,
+          value & 255
+        ].map(channel => Math.max(
+          0,
+          Math.min(255, channel + amount)
+        ));
+
+        return `rgb(${channels.join(",")})`;
+      };
+
+      function drawGrains(phase, alpha = 1) {
+        const style = phaseStyles[phase];
+        const w = microCanvas.width;
+        const h = microCanvas.height;
+        const rowHeight = h / (grainRows.length - 1);
+
+        microContext.save();
+        microContext.globalAlpha = alpha;
+        microContext.lineWidth = 3;
+        microContext.strokeStyle = style.line;
+
+        for (let row = 0; row < grainRows.length - 1; row++) {
+          for (let col = 0; col < grainRows[row].length - 1; col++) {
+            const points = [
+              [grainRows[row][col] * w, row * rowHeight],
+              [grainRows[row][col + 1] * w, row * rowHeight],
+              [grainRows[row + 1][col + 1] * w, (row + 1) * rowHeight],
+              [grainRows[row + 1][col] * w, (row + 1) * rowHeight]
+            ];
+
+            microContext.beginPath();
+            points.forEach(([x, y], index) => {
+              if (index) microContext.lineTo(x, y);
+              else microContext.moveTo(x, y);
+            });
+            microContext.closePath();
+            microContext.fillStyle = shade(
+              style.color,
+              ((row * 4 + col) % 3 - 1) * 7
+            );
+            microContext.fill();
+            microContext.stroke();
+          }
+        }
+
+        microContext.restore();
+      }
+
+      function drawLiquid() {
+        const { color, line } = phaseStyles.liquid;
+        const w = microCanvas.width;
+        const h = microCanvas.height;
+        const gradient =
+          microContext.createLinearGradient(0, 0, w, h);
+
+        gradient.addColorStop(0, shade(color, 18));
+        gradient.addColorStop(1, shade(color, -8));
+        microContext.fillStyle = gradient;
+        microContext.fillRect(0, 0, w, h);
+
+        microContext.strokeStyle = line;
+        microContext.globalAlpha = .28;
+        microContext.lineWidth = 2;
+
+        [58, 144, 232].forEach((y, row) => {
+          microContext.beginPath();
+          for (let x = -20; x <= w + 20; x += 20) {
+            const waveY = y + Math.sin(x / 42 + row) * 8;
+            if (x === -20) microContext.moveTo(x, waveY);
+            else microContext.lineTo(x, waveY);
+          }
+          microContext.stroke();
+        });
+
+        microContext.fillStyle = "rgba(255,253,248,.55)";
+        [[.13,.23,5],[.31,.72,7],[.55,.35,4],[.76,.68,6],[.9,.2,4]]
+          .forEach(([x, y, radius]) => {
+            microContext.beginPath();
+            microContext.arc(x * w, y * h, radius, 0, Math.PI * 2);
+            microContext.fill();
+          });
+
+        microContext.globalAlpha = 1;
+      }
+
+      function blobPath(cx, cy, rx, ry, seed = 0) {
+        microContext.beginPath();
+
+        for (let index = 0; index <= 18; index++) {
+          const angle = (index / 18) * Math.PI * 2;
+          const variation =
+            1 + .12 * Math.sin(angle * 3 + seed);
+          const x = cx + Math.cos(angle) * rx * variation;
+          const y = cy + Math.sin(angle) * ry * variation;
+
+          if (index) microContext.lineTo(x, y);
+          else microContext.moveTo(x, y);
+        }
+
+        microContext.closePath();
+      }
+
+      function drawCrystals(phase, share, rimPhase = null) {
+        const style = phaseStyles[phase];
+        const w = microCanvas.width;
+        const h = microCanvas.height;
+        const scale = .18 + .86 * Math.sqrt(Math.max(.02, share));
+        const centers = [
+          [.17,.25,52,38], [.47,.19,65,44], [.79,.27,55,46],
+          [.28,.67,68,47], [.62,.63,60,52], [.88,.74,49,36]
+        ];
+
+        centers.forEach(([x, y, rx, ry], index) => {
+          blobPath(x * w, y * h, rx * scale, ry * scale, index);
+          microContext.fillStyle = style.color;
+          microContext.fill();
+          microContext.lineWidth = rimPhase ? 11 : 3;
+          microContext.strokeStyle = rimPhase
+            ? phaseStyles[rimPhase].color
+            : style.line;
+          microContext.stroke();
+
+          if (rimPhase) {
+            microContext.lineWidth = 2;
+            microContext.strokeStyle = phaseStyles[rimPhase].line;
+            microContext.stroke();
+          }
+        });
+      }
+
+      function drawIslands(phase, share) {
+        if (share <= .005) return;
+
+        const style = phaseStyles[phase];
+        const w = microCanvas.width;
+        const h = microCanvas.height;
+        const scale = .18 + .92 * Math.sqrt(Math.min(.58, share));
+        const centers = [
+          [.13,.24,48,34], [.38,.18,59,35], [.67,.27,53,42], [.88,.18,44,32],
+          [.24,.61,62,45], [.53,.58,52,38], [.79,.67,65,43], [.43,.87,44,29]
+        ];
+
+        centers.forEach(([x, y, rx, ry], index) => {
+          blobPath(x * w, y * h, rx * scale, ry * scale, index + 2);
+          microContext.fillStyle = shade(
+            style.color,
+            (index % 3 - 1) * 6
+          );
+          microContext.fill();
+          microContext.lineWidth = 3;
+          microContext.strokeStyle = style.line;
+          microContext.stroke();
+        });
+      }
+
+      function drawCementite(share, backgroundPhase) {
+        const cementite = phaseStyles.cementite;
+        const w = microCanvas.width;
+        const h = microCanvas.height;
+
+        if (share >= .72) {
+          microContext.fillStyle = cementite.color;
+          microContext.fillRect(0, 0, w, h);
+          drawIslands(backgroundPhase, 1 - share);
+          return;
+        }
+
+        const count = Math.max(2, Math.round(3 + share * 18));
+        microContext.save();
+        microContext.strokeStyle = cementite.color;
+        microContext.lineCap = "round";
+        microContext.lineWidth = 3 + share * 9;
+
+        for (let index = 0; index < count; index++) {
+          const y = ((index + .5) / count) * h;
+          const direction = index % 2 ? 1 : -1;
+          microContext.beginPath();
+          microContext.moveTo(-30, y + direction * 34);
+          microContext.lineTo(w + 30, y - direction * 34);
+          microContext.stroke();
+        }
+
+        microContext.lineWidth = 2;
+        microContext.strokeStyle = cementite.line;
+        for (let x = 70; x < w; x += 118) {
+          microContext.beginPath();
+          microContext.moveTo(x, 0);
+          microContext.lineTo(x - 35, h);
+          microContext.stroke();
+        }
+        microContext.restore();
+      }
+
+      function drawSolidMixture(leftPhase, rightPhase, leftShare) {
+        const rightShare = 1 - leftShare;
+        const base = leftShare >= rightShare ? leftPhase : rightPhase;
+        const secondary = base === leftPhase ? rightPhase : leftPhase;
+        const secondaryShare = Math.min(leftShare, rightShare);
+
+        drawGrains(base);
+        drawIslands(secondary, secondaryShare);
+      }
+
+      function drawLamellarColonies(matrixPhase, linePhase, dense = false) {
+        const w = microCanvas.width;
+        const h = microCanvas.height;
+        const matrix = phaseStyles[matrixPhase];
+        const lines = phaseStyles[linePhase];
+
+        microContext.fillStyle = matrix.color;
+        microContext.fillRect(0, 0, w, h);
+
+        const colonies = [
+          [.18,.25,110,75,-.35], [.52,.22,120,76,.32], [.83,.27,94,70,-.18],
+          [.28,.73,130,82,.18], [.67,.7,145,88,-.38], [.94,.77,82,66,.28]
+        ];
+
+        colonies.forEach(([x, y, rx, ry, rotation], index) => {
+          microContext.save();
+          blobPath(x * w, y * h, rx, ry, index);
+          microContext.clip();
+          microContext.translate(x * w, y * h);
+          microContext.rotate(rotation);
+          microContext.strokeStyle = lines.color;
+          microContext.lineWidth = dense ? 7 : 5;
+
+          for (let stripe = -180; stripe <= 180; stripe += dense ? 15 : 20) {
+            microContext.beginPath();
+            microContext.moveTo(stripe, -120);
+            microContext.lineTo(stripe, 120);
+            microContext.stroke();
+          }
+          microContext.restore();
+
+          blobPath(x * w, y * h, rx, ry, index);
+          microContext.lineWidth = 3;
+          microContext.strokeStyle = matrix.line;
+          microContext.stroke();
+        });
+      }
+
+      function drawPhaseBoundary() {
+        const w = microCanvas.width;
+        const h = microCanvas.height;
+        drawGrains("alpha");
+        microContext.fillStyle = "rgba(255,253,248,.72)";
+        microContext.beginPath();
+        microContext.moveTo(w * .43, 0);
+        microContext.lineTo(w * .57, 0);
+        microContext.lineTo(w * .42, h);
+        microContext.lineTo(w * .28, h);
+        microContext.closePath();
+        microContext.fill();
+        microContext.strokeStyle = phaseStyles.gamma.line;
+        microContext.lineWidth = 5;
+        microContext.stroke();
+      }
+
+      function setMicrostructureLegend(items) {
+        microstructureLegend.replaceChildren();
+
+        items.forEach(({ phase, share = null }) => {
+          const item = document.createElement("span");
+          const swatch = document.createElement("i");
+          const label = document.createElement("span");
+          const style = phaseStyles[phase];
+
+          swatch.style.background = style.color;
+          label.textContent = share === null
+            ? style.label
+            : `${style.label} · ${Math.round(share * 100)} %`;
+          item.append(swatch, label);
+          microstructureLegend.appendChild(item);
+        });
+      }
+
+      function drawMicrostructure(region, fractions) {
+        const key = region.microKey || region.key;
+        const leftShare = fractions?.leftFraction ?? .5;
+        const rightShare = 1 - leftShare;
+        const legend = [];
+
+        microContext.clearRect(
+          0,
+          0,
+          microCanvas.width,
+          microCanvas.height
+        );
+
+        switch (key) {
+          case "liquid":
+            drawLiquid();
+            legend.push({ phase: "liquid", share: 1 });
+            break;
+          case "delta":
+          case "gamma":
+          case "alpha":
+            drawGrains(key);
+            legend.push({ phase: key, share: 1 });
+            break;
+          case "deltaLiquid":
+          case "gammaLiquid": {
+            const solidPhase = key === "deltaLiquid"
+              ? "delta"
+              : "gamma";
+            drawLiquid();
+            drawCrystals(solidPhase, leftShare);
+            legend.push(
+              { phase: solidPhase, share: leftShare },
+              { phase: "liquid", share: rightShare }
+            );
+            break;
+          }
+          case "liquidCementite":
+            drawLiquid();
+            drawCementite(rightShare, "liquid");
+            legend.push(
+              { phase: "liquid", share: leftShare },
+              { phase: "cementite", share: rightShare }
+            );
+            break;
+          case "deltaGamma":
+            drawSolidMixture("delta", "gamma", leftShare);
+            legend.push(
+              { phase: "delta", share: leftShare },
+              { phase: "gamma", share: rightShare }
+            );
+            break;
+          case "alphaGamma":
+            drawSolidMixture("alpha", "gamma", leftShare);
+            legend.push(
+              { phase: "alpha", share: leftShare },
+              { phase: "gamma", share: rightShare }
+            );
+            break;
+          case "gammaCementite":
+          case "alphaCementite": {
+            const matrixPhase = key === "gammaCementite"
+              ? "gamma"
+              : "alpha";
+            drawGrains(matrixPhase);
+            drawCementite(rightShare, matrixPhase);
+            legend.push(
+              { phase: matrixPhase, share: leftShare },
+              { phase: "cementite", share: rightShare }
+            );
+            break;
+          }
+          case "eutectoid":
+            drawLamellarColonies("alpha", "cementite", true);
+            legend.push(
+              { phase: "alpha" },
+              { phase: "cementite" }
+            );
+            break;
+          case "eutectic":
+            drawLamellarColonies("gamma", "cementite");
+            legend.push(
+              { phase: "gamma" },
+              { phase: "cementite" }
+            );
+            break;
+          case "peritectic":
+            drawLiquid();
+            drawCrystals("delta", .46, "gamma");
+            legend.push(
+              { phase: "liquid" },
+              { phase: "delta" },
+              { phase: "gamma" }
+            );
+            break;
+          default:
+            drawPhaseBoundary();
+            legend.push(
+              { phase: "alpha" },
+              { phase: "gamma" }
+            );
+        }
+
+        microstructureBadge.textContent = region.name;
+        microstructureCaption.textContent =
+          microstructureText[key] || microstructureText.boundary;
+        setMicrostructureLegend(legend);
+
+        const legendText = legend.map(({ phase, share }) => {
+          const percentage = share == null
+            ? ""
+            : ` ${Math.round(share * 100)} Prozent`;
+          return `${phaseStyles[phase].label}${percentage}`;
+        }).join(", ");
+
+        microCanvas.setAttribute(
+          "aria-label",
+          `Schematische Mikrostruktur: ${legendText}`
+        );
+      }
 
       const polygonPoints = points =>
         points
@@ -1220,6 +1820,7 @@
           Math.abs(t - 727) < 3
         ) {
           return {
+            microKey: "eutectoid",
             name: "Eutektoider Punkt",
             description:
               "Invariante Reaktion: γ-Austenit ⇌ α-Ferrit + Fe₃C (Perlitbildung)."
@@ -1231,6 +1832,7 @@
           Math.abs(t - 1147) < 3
         ) {
           return {
+            microKey: "eutectic",
             name: "Eutektischer Punkt",
             description:
               "Invariante Reaktion: Schmelze ⇌ γ-Austenit + Fe₃C (Ledeburitbildung)."
@@ -1242,6 +1844,7 @@
           Math.abs(t - 1493) < 3
         ) {
           return {
+            microKey: "peritectic",
             name: "Peritektischer Punkt",
             description:
               "Invariante Reaktion: Schmelze + δ-Ferrit ⇌ γ-Austenit."
@@ -1742,6 +2345,7 @@
 
         const region = regionAt(c, t);
         const lever = leverFor(region.key, t);
+        let phaseFractions = null;
 
         carbonOut.value =
           `${fmt(c)} M.-% C`;
@@ -1800,6 +2404,11 @@
 
           const rightFraction =
             1 - leftFraction;
+
+          phaseFractions = {
+            leftFraction,
+            rightFraction
+          };
 
           const leftPct =
             Math.round(leftFraction * 100);
@@ -1869,6 +2478,8 @@
               ? "An einem invarianten Punkt koexistieren drei Phasen. Das gewöhnliche binäre Hebelgesetz ist dort nicht eindeutig anwendbar."
               : "Das Hebelgesetz wird eingeblendet, sobald der gewählte Zustand in einem Zweiphasengebiet liegt.";
         }
+
+        drawMicrostructure(region, phaseFractions);
 
         if (dynamicLayer) {
           add(dynamicLayer, "circle", {
